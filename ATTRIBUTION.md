@@ -12,7 +12,7 @@ The code in this repository is MIT-licensed (see [LICENSE](LICENSE)). Data and l
 | Traditional → simplified Chinese place names (build time only, not distributed) | `tools/build_data.py` | [OpenCC](https://github.com/BYVoid/OpenCC) `TSCharacters.txt` | Apache-2.0 |
 | Astronomy calculations | `vendor/astronomy.browser.min.js` | [Astronomy Engine](https://github.com/cosinekitty/astronomy) by Don Cross | MIT (header in the file) |
 | Projection and geometry | `vendor/d3.min.js` | [D3](https://d3js.org) by Mike Bostock | ISC ([`vendor/LICENSE.d3.txt`](vendor/LICENSE.d3.txt)) |
-| Fonts | loaded from Google Fonts | Cormorant Garamond, Jost, Noto Sans SC, Noto Serif SC, Ma Shan Zheng | SIL Open Font License 1.1 |
+| Fonts (self-hosted subsets, built by `tools/build_fonts.py`) | `fonts/` | Cormorant Garamond, Jost, Noto Sans SC, Noto Serif SC and Ma Shan Zheng, from [google/fonts](https://github.com/google/fonts) | SIL Open Font License 1.1 ([`fonts/licenses/`](fonts/licenses)) |
 | City coordinates and time zones | `js/cities.js` | Compiled for this project | MIT |
 
 All derived files can be regenerated with `python tools/build_data.py`.

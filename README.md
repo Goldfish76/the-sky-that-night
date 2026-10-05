@@ -24,7 +24,7 @@ Free, open source, and nothing ever leaves your browser.
 - **Two skies on one poster.** For example, the nights two people were born, each with its own date and place.
 - **Any place on Earth.** Offline search over 34,000 cities with their time zones, or enter custom coordinates.
 - **Print-ready PNG or PDF.** A4 or A3 at 300 DPI.
-- **Private by design.** No account, no tracking, no uploads. City search runs offline too.
+- **Private by design.** No account, no tracking, no uploads, no third-party requests. Fonts are self-hosted and city search runs offline.
 
 | Noir | Parchment | Ink Wash |
 |---|---|---|
@@ -63,13 +63,14 @@ Then open http://localhost:8000. Any static file server works.
 - [x] PDF export (300 DPI)
 - [x] Offline search for any city
 - [ ] Vector SVG export
-- [ ] Self-hosted fonts, so it also works where Google Fonts is blocked
+- [x] Self-hosted fonts (no Google Fonts, works where it is blocked)
 - [ ] Birthday stars in the two-sky layout
 - [ ] More styles. Themes live in [`js/themes.js`](js/themes.js); pull requests welcome.
 
 ## Rebuilding the data
 
 `python tools/build_data.py` downloads the public sources and regenerates the files in `data/` (star names, birthday-star distances, world cities).
+`python tools/build_fonts.py` rebuilds the self-hosted fonts in `fonts/` (needs `pip install fonttools brotli`).
 
 ## Credits and license
 
