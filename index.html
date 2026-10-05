@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Sky That Night · 那晚星空</title>
   <meta name="description" content="Pick a date and a place, get a print-ready poster of the real night sky at that moment. Free, open source, runs entirely in your browser. 输入日期和地点，生成那一刻真实星空的海报。">
+  <meta property="og:title" content="The Sky That Night · 那晚星空">
+  <meta property="og:description" content="A print-ready poster of the real night sky for any date and place. Free and open source.">
+  <meta property="og:image" content="https://goldfish76.github.io/the-sky-that-night/docs/hero.jpg">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@400;600&display=swap">
@@ -27,6 +31,14 @@
   <main class="layout">
     <aside class="panel">
       <section>
+        <h2 data-i18n="sectionLayout"></h2>
+        <div class="seg" role="group">
+          <button type="button" data-layout="single" data-i18n="layoutSingle"></button>
+          <button type="button" data-layout="double" data-i18n="layoutDouble"></button>
+        </div>
+      </section>
+
+      <section>
         <h2 data-i18n="sectionMoment"></h2>
         <div class="row">
           <label><span data-i18n="date"></span><input id="date" type="date"></label>
@@ -36,10 +48,11 @@
 
       <section>
         <h2 data-i18n="sectionPlace"></h2>
-        <label><span data-i18n="city"></span>
-          <input id="city" list="city-list" autocomplete="off" data-i18n-ph="cityPlaceholder">
-          <datalist id="city-list"></datalist>
-        </label>
+        <label><span data-i18n="city"></span></label>
+        <div class="search">
+          <input id="city" type="text" autocomplete="off" spellcheck="false" data-i18n-ph="cityPlaceholder" aria-label="City">
+          <ul id="city-menu" class="menu" hidden></ul>
+        </div>
         <div class="row tight">
           <label class="check"><input id="custom" type="checkbox"><span data-i18n="customCoords"></span></label>
           <button id="locate" type="button" class="ghost" data-i18n="useMyLocation"></button>
@@ -53,6 +66,22 @@
         </div>
         <p class="note" id="tz-note"></p>
         <label><span data-i18n="placeLabel"></span><input id="place-label" type="text" maxlength="60"></label>
+      </section>
+
+      <section id="sky-b-section" hidden>
+        <h2 data-i18n="sectionSkyB"></h2>
+        <label><span data-i18n="captionB"></span><input id="caption-b" type="text" maxlength="30"></label>
+        <div class="row">
+          <label><span data-i18n="date"></span><input id="date-b" type="date"></label>
+          <label><span data-i18n="time"></span><input id="time-b" type="time"></label>
+        </div>
+        <label><span data-i18n="city"></span></label>
+        <div class="search">
+          <input id="city-b" type="text" autocomplete="off" spellcheck="false" data-i18n-ph="cityPlaceholder" aria-label="City">
+          <ul id="city-b-menu" class="menu" hidden></ul>
+        </div>
+        <p class="note" id="tz-note-b"></p>
+        <label><span data-i18n="placeLabel"></span><input id="place-label-b" type="text" maxlength="60"></label>
       </section>
 
       <section>
@@ -73,6 +102,16 @@
         <h2 data-i18n="sectionText"></h2>
         <label><span data-i18n="title"></span><input id="title" type="text" maxlength="40"></label>
         <label><span data-i18n="message"></span><input id="message" type="text" maxlength="70" data-i18n-ph="messagePlaceholder"></label>
+        <label id="caption-a-wrap" hidden><span data-i18n="captionA"></span><input id="caption" type="text" maxlength="30"></label>
+      </section>
+
+      <section>
+        <h2 data-i18n="sectionBirthday"></h2>
+        <div id="birthday-fields">
+          <label class="check"><input id="birthday-on" type="checkbox"><span data-i18n="birthdayOn"></span></label>
+          <label class="spaced"><span data-i18n="birthday"></span><input id="birthday" type="date"></label>
+        </div>
+        <p class="note" id="birthday-note"></p>
       </section>
 
       <section>
@@ -97,7 +136,10 @@
             <option value="web" data-size="web"></option>
           </select>
         </label>
-        <button id="export" type="button" class="primary" data-i18n="exportPng"></button>
+        <div class="row">
+          <button id="export" type="button" class="primary" data-i18n="exportPng"></button>
+          <button id="export-pdf" type="button" class="primary secondary" data-i18n="exportPdf"></button>
+        </div>
       </section>
 
       <p class="privacy" data-i18n="privacy"></p>

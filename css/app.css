@@ -116,6 +116,28 @@ button.ghost { background: transparent; color: var(--accent); border: 1px solid 
 
 .privacy { color: var(--muted); font-size: 12px; margin: 14px 0 0; }
 
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button {
+  background: var(--panel-2); color: var(--muted); border: 0; padding: 8px 10px; cursor: pointer; font: inherit;
+}
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.active { background: color-mix(in srgb, var(--accent) 22%, var(--panel-2)); color: var(--text); }
+
+.search { position: relative; margin: -4px 0 10px; }
+.menu {
+  position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px);
+  list-style: none; margin: 0; padding: 4px; max-height: 320px; overflow-y: auto;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+}
+.menu li { display: flex; flex-direction: column; padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+.menu li small { color: var(--muted); font-size: 11px; }
+.menu li.active, .menu li:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.menu li.muted { color: var(--muted); cursor: default; background: none; }
+
+label.spaced { margin-top: 10px; }
+button.primary.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+
 .stage {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 28px; overflow: auto;

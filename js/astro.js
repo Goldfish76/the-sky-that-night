@@ -11,7 +11,7 @@ export async function loadData(base = 'data/') {
     if (!r.ok) throw new Error(`Failed to load ${name}`);
     return r.json();
   });
-  const [stars, lines, linesCn, cons, consCn, mw, starNames] = await Promise.all([
+  const [stars, lines, linesCn, cons, consCn, mw, starNames, nearby] = await Promise.all([
     get('stars.6.json'),
     get('constellations.lines.json'),
     get('constellations.lines.cn.json'),
@@ -19,10 +19,36 @@ export async function loadData(base = 'data/') {
     get('constellations.cn.json'),
     get('mw.json'),
     get('starnames.bright.json'),
+    get('lightyear.json'),
   ]);
   stars.features.sort((a, b) => b.properties.mag - a.properties.mag); // faint first, bright on top
   fixWinding(mw);
-  return { stars, lines, linesCn, cons, consCn, mw, starNames };
+  return { stars, lines, linesCn, cons, consCn, mw, starNames, nearby };
+}
+
+const MS_PER_YEAR = 365.2425 * 86400000;
+
+// Age in years at the poster moment for someone born on the given local date (noon, to avoid off-by-one-day).
+export function ageInYears(birthday, utcDate) {
+  if (!birthday) return null;
+  const [y, m, d] = birthday.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return (utcDate.getTime() - Date.UTC(y, m - 1, d, 12)) / MS_PER_YEAR;
+}
+
+// "Light-year birthday star": a naked-eye star whose distance in light-years matches the age,
+// so the light seen at the poster moment left the star around the day the person was born.
+// Prefers stars above the horizon, then a close distance match, then brightness.
+export function findBirthdayStar(nearby, age, zenith) {
+  if (age == null || age < 3.5) return null;
+  const score = s => Math.abs(s.ly - age) + 0.25 * s.mag;
+  const best = list => list.reduce((a, b) => (score(b) < score(a) ? b : a));
+  for (const tol of [1, 2, 3.5]) {
+    const visible = nearby.filter(s => Math.abs(s.ly - age) <= tol && isAboveHorizon(s.c, zenith, 3));
+    if (visible.length) return { star: best(visible), visible: true, age };
+  }
+  const any = nearby.filter(s => Math.abs(s.ly - age) <= 3.5);
+  return any.length ? { star: best(any), visible: false, age } : null;
 }
 
 // d3-geo fills the smaller side of a spherical ring; flip any polygon that would cover more than a hemisphere.

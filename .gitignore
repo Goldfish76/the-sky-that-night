@@ -4,3 +4,4 @@ exports/
 !docs/**/*.png
 .DS_Store
 Thumbs.db
+tools/.cache/

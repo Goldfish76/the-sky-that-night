@@ -23,6 +23,7 @@ export const THEMES = {
       rule: 'rgba(242,239,232,0.35)',
     },
     credit: 'rgba(242,239,232,0.35)',
+    accent: '#e6c681',
     defaults: { culture: 'western', lines: true, names: false, milkyWay: true, bodies: true, grid: false, starNames: false },
   },
 
@@ -49,6 +50,7 @@ export const THEMES = {
       rule: 'rgba(51,35,15,0.5)',
     },
     credit: 'rgba(51,35,15,0.45)',
+    accent: '#8f2a17',
     defaults: { culture: 'western', lines: true, names: true, milkyWay: true, bodies: true, grid: true, starNames: true },
   },
 
@@ -78,6 +80,7 @@ export const THEMES = {
     },
     seal: { color: '#b3261e', text: ['那', '晚', '星', '空'] },
     credit: 'rgba(23,20,15,0.42)',
+    accent: '#b3261e',
     defaults: { culture: 'chinese', lines: true, names: true, milkyWay: true, bodies: true, grid: false, starNames: false },
   },
 };

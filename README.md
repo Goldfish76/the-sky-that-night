@@ -20,12 +20,19 @@ Free, open source, and nothing ever leaves your browser.
 - **Moon with the right phase and orientation, plus the five naked-eye planets and the Milky Way.**
 - **Real local time.** Your browser's time-zone database applies historical daylight-saving rules.
 - **Bilingual (English / 中文).** The Ink style can show the Chinese lunar date and the traditional double-hour (时辰).
-- **Print-ready PNG.** A4 or A3 at 300 DPI.
-- **Private by design.** No account, no tracking, no uploads.
+- **Light-year birthday star.** Enter a birthday and the poster marks a naked-eye star whose distance in light-years matches the age that night. The light you saw from it left the star the year you were born.
+- **Two skies on one poster.** For example, the nights two people were born, each with its own date and place.
+- **Any place on Earth.** Offline search over 34,000 cities with their time zones, or enter custom coordinates.
+- **Print-ready PNG or PDF.** A4 or A3 at 300 DPI.
+- **Private by design.** No account, no tracking, no uploads. City search runs offline too.
 
 | Noir | Parchment | Ink Wash |
 |---|---|---|
 | ![Noir](docs/samples/noir-new-york.jpg) | ![Parchment](docs/samples/parchment-london.jpg) | ![Ink Wash](docs/samples/ink-beijing-qixi.jpg) |
+
+| Light-year birthday star | Two skies | 两片星空 |
+|---|---|---|
+| ![Birthday star](docs/samples/birthday-star-noir.jpg) | ![Two skies, Parchment](docs/samples/two-skies-parchment.jpg) | ![Two skies, Ink Wash](docs/samples/two-skies-ink.jpg) |
 
 ## Run it locally
 
@@ -47,15 +54,22 @@ Then open http://localhost:8000. Any static file server works.
 4. **Moon and planets:** topocentric positions, with the Moon's phase and the direction of its lit side.
 5. **Check:** compared against Astronomy Engine's own altitude/azimuth for bright stars, the largest error is about **0.005°**.
 6. **Not modelled:** atmospheric refraction. Near the horizon, real stars appear up to ~0.5° higher.
+7. **Birthday-star distances:** from the [HYG database](https://github.com/astronexus/HYG-Database) (Hipparcos parallaxes). For the fainter stars the uncertainty can be a few light-years.
 
 ## Roadmap
 
-- [ ] "Light-year birthday star": a star whose light left it the year you were born
-- [ ] Two skies side by side (where you each were born)
-- [ ] Vector PDF / SVG export
-- [ ] Search any place, offline
+- [x] Light-year birthday star
+- [x] Two skies on one poster
+- [x] PDF export (300 DPI)
+- [x] Offline search for any city
+- [ ] Vector SVG export
 - [ ] Self-hosted fonts, so it also works where Google Fonts is blocked
+- [ ] Birthday stars in the two-sky layout
 - [ ] More styles. Themes live in [`js/themes.js`](js/themes.js); pull requests welcome.
+
+## Rebuilding the data
+
+`python tools/build_data.py` downloads the public sources and regenerates the files in `data/` (star names, birthday-star distances, world cities).
 
 ## Credits and license
 

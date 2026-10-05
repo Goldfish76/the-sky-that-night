@@ -9,8 +9,14 @@ const d3 = window.d3;
 
 export const POSTER_W = 1000;
 export const POSTER_H = 1414;
-export const CHART = { cx: 500, cy: 520, R: 395 };
+const BASE_R = 395;
 const TAU = Math.PI * 2;
+
+// Chart geometry per layout. "double" is a zigzag: first sky top-left, second sky bottom-right.
+export const LAYOUTS = {
+  single: [{ cx: 500, cy: 520, R: BASE_R }],
+  double: [{ cx: 360, cy: 330, R: 248 }, { cx: 640, cy: 858, R: 248 }],
+};
 
 function rng(seed) {
   let a = seed >>> 0;
@@ -64,12 +70,16 @@ function spacedText(ctx, str, x, y, spec, opts = {}) {
   return total;
 }
 
+function scaled(spec, k) {
+  return { ...spec, size: Math.max(8, spec.size * k) };
+}
+
 // Keeps labels from overlapping each other, bright stars, or the chart edge,
 // and never draws the same text twice (e.g. a star and its asterism are both "织女").
 class Placer {
-  constructor() { this.boxes = []; this.texts = new Set(); }
+  constructor(chart) { this.chart = chart; this.boxes = []; this.texts = new Set(); }
   free(b) {
-    const { cx, cy, R } = CHART;
+    const { cx, cy, R } = this.chart;
     const corners = [[b.x, b.y], [b.x + b.w, b.y], [b.x, b.y + b.h], [b.x + b.w, b.y + b.h]];
     if (!corners.every(([x, y]) => Math.hypot(x - cx, y - cy) < R - 6)) return false;
     return !this.boxes.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y);
@@ -212,13 +222,25 @@ function labelSpec(spec, text) {
   return spec;
 }
 
-function drawSky(ctx, scene, s) {
-  const { data, sky, theme, opts, lang } = scene;
-  const { cx, cy, R } = CHART;
+export function birthdayStarName(lang, culture, star) {
+  if (lang !== 'zh') return star.en;
+  return (culture === 'chinese' && star.cn) ? star.cn : star.zh;
+}
+
+function formatLy(lang, ly) {
+  return lang === 'zh' ? `${ly.toFixed(1)} 光年` : `${ly.toFixed(1)} light-years`;
+}
+
+// Draws one sky disc. `chart` is {cx, cy, R}; `k` scales marks and labels for smaller charts.
+function drawSky(ctx, scene, s, sky, chart, birthday) {
+  const { data, theme, opts, lang } = scene;
+  const { cx, cy, R } = chart;
+  const k = R / BASE_R;
+  const km = Math.pow(k, 0.8); // marks and text shrink less than the chart
   const proj = makeProjection(sky.zenith, cx, cy, R, sky.north);
   const path = d3.geoPath(proj, ctx);
   const zenith = sky.zenith;
-  const placer = new Placer();
+  const placer = new Placer(chart);
 
   ctx.save();
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip();
@@ -232,7 +254,7 @@ function drawSky(ctx, scene, s) {
   if (opts.milkyWay) {
     const mw = theme.milkyWay;
     ctx.save();
-    if (mw.blur && 'filter' in ctx) ctx.filter = `blur(${(mw.blur * s).toFixed(1)}px)`;
+    if (mw.blur && 'filter' in ctx) ctx.filter = `blur(${(mw.blur * k * s).toFixed(1)}px)`;
     data.mw.features.forEach((f, i) => {
       ctx.beginPath(); path(f);
       ctx.fillStyle = `rgba(${mw.rgb},${mw.alphas[i] ?? mw.alphas[mw.alphas.length - 1]})`;
@@ -243,19 +265,19 @@ function drawSky(ctx, scene, s) {
 
   if (opts.grid) {
     ctx.beginPath(); path(d3.geoGraticule().step([15, 10])());
-    ctx.strokeStyle = theme.grid.color; ctx.lineWidth = theme.grid.width; ctx.stroke();
+    ctx.strokeStyle = theme.grid.color; ctx.lineWidth = theme.grid.width * km; ctx.stroke();
     if (theme.ecliptic) {
       ctx.save();
-      ctx.setLineDash(theme.ecliptic.dash);
+      ctx.setLineDash(theme.ecliptic.dash.map(v => v * km));
       ctx.beginPath(); path(eclipticLine());
-      ctx.strokeStyle = theme.ecliptic.color; ctx.lineWidth = theme.ecliptic.width; ctx.stroke();
+      ctx.strokeStyle = theme.ecliptic.color; ctx.lineWidth = theme.ecliptic.width * km; ctx.stroke();
       ctx.restore();
     }
   }
 
   if (opts.lines) {
     ctx.beginPath(); path(opts.culture === 'chinese' ? data.linesCn : data.lines);
-    ctx.strokeStyle = theme.lines.color; ctx.lineWidth = theme.lines.width;
+    ctx.strokeStyle = theme.lines.color; ctx.lineWidth = theme.lines.width * km;
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.stroke();
   }
@@ -267,7 +289,7 @@ function drawSky(ctx, scene, s) {
     const mag = f.properties.mag;
     if (mag > maxMag || !isAboveHorizon(c, zenith)) continue;
     const [x, y] = proj(c);
-    const r = starRadius(mag) * theme.star.sizeScale;
+    const r = starRadius(mag) * theme.star.sizeScale * km;
     drawStar(ctx, x, y, r, f.properties, theme);
     if (mag < 2.6) {
       placer.add({ x: x - r - 1.5, y: y - r - 1.5, w: 2 * r + 3, h: 2 * r + 3 });
@@ -278,32 +300,55 @@ function drawSky(ctx, scene, s) {
   ctx.textBaseline = 'middle';
   const L = STR[lang];
 
+  // Light-year birthday star: drawn first so its label wins any placement conflict.
+  if (birthday && birthday.visible) {
+    const st = birthday.star;
+    const [x, y] = proj(st.c);
+    const r = starRadius(st.mag) * theme.star.sizeScale * km;
+    ctx.strokeStyle = theme.accent;
+    ctx.lineWidth = 1.3 * km;
+    ctx.beginPath(); ctx.arc(x, y, r + 5 * km, 0, TAU); ctx.stroke();
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 0.8 * km;
+    ctx.beginPath(); ctx.arc(x, y, r + 10 * km, 0, TAU); ctx.stroke();
+    ctx.globalAlpha = 1;
+    placer.add({ x: x - r - 11 * km, y: y - r - 11 * km, w: 2 * r + 22 * km, h: 2 * r + 22 * km });
+    const text = `${birthdayStarName(lang, opts.culture, st)} · ${formatLy(lang, st.ly).replace(' light-years', ' ly')}`;
+    const sp = labelSpec(scaled({ ...theme.starNames, color: theme.accent, spacing: 0.03, cjkSpacing: 0.04, size: theme.starNames.size + 1 }, km), text);
+    ctx.fillStyle = theme.accent;
+    const g = r + 13 * km;
+    placer.place(ctx, text, sp, [
+      [x + g, y, 'left'], [x - g, y, 'right'], [x, y - g - sp.size * 0.4, 'center'], [x, y + g + sp.size * 0.4, 'center'],
+    ]);
+  }
+
   if (opts.bodies) {
     const bc = theme.bodies;
-    const spec = { ...theme.starNames, spacing: 0.04, cjkSpacing: 0.04 };
+    const spec = scaled({ ...theme.starNames, spacing: 0.04, cjkSpacing: 0.04 }, km);
     const m = sky.moon;
     const items = [];
     if (m.alt > 0) {
       const [x, y] = proj(m.coord);
       const toward = d3.geoInterpolate(m.coord, sky.sun.coord)(0.02);
       const [tx, ty] = proj(toward);
-      drawMoon(ctx, x, y, 11, m.fraction, Math.atan2(ty - y, tx - x), bc);
-      placer.add({ x: x - 13, y: y - 13, w: 26, h: 26 });
-      items.push({ x, y, r: 11, text: `${moonPhaseName(lang, m.phaseDeg, m.fraction)} ${Math.round(m.fraction * 100)}%` });
+      const mr = 11 * km;
+      drawMoon(ctx, x, y, mr, m.fraction, Math.atan2(ty - y, tx - x), bc);
+      placer.add({ x: x - mr - 2, y: y - mr - 2, w: 2 * mr + 4, h: 2 * mr + 4 });
+      items.push({ x, y, r: mr, text: `${moonPhaseName(lang, m.phaseDeg, m.fraction)} ${Math.round(m.fraction * 100)}%` });
     }
     for (const p of sky.planets) {
       if (p.alt <= 0) continue;
       const [x, y] = proj(p.coord);
       ctx.fillStyle = bc.planet;
-      ctx.beginPath(); ctx.arc(x, y, 2.8, 0, TAU); ctx.fill();
-      ctx.strokeStyle = bc.planet; ctx.lineWidth = 0.7;
-      ctx.beginPath(); ctx.arc(x, y, 5.2, 0, TAU); ctx.stroke();
-      placer.add({ x: x - 6, y: y - 6, w: 12, h: 12 });
-      items.push({ x, y, r: 5.2, text: L.bodies[p.name] });
+      ctx.beginPath(); ctx.arc(x, y, 2.8 * km, 0, TAU); ctx.fill();
+      ctx.strokeStyle = bc.planet; ctx.lineWidth = 0.7 * km;
+      ctx.beginPath(); ctx.arc(x, y, 5.2 * km, 0, TAU); ctx.stroke();
+      placer.add({ x: x - 6 * km, y: y - 6 * km, w: 12 * km, h: 12 * km });
+      items.push({ x, y, r: 5.2 * km, text: L.bodies[p.name] });
     }
     ctx.fillStyle = bc.label;
     for (const it of items) {
-      const sp = labelSpec(spec, it.text), g = it.r + 5;
+      const sp = labelSpec(spec, it.text), g = it.r + 5 * km;
       placer.place(ctx, it.text, sp, [
         [it.x + g, it.y, 'left'], [it.x - g, it.y, 'right'],
         [it.x, it.y + g + sp.size * 0.6, 'center'], [it.x, it.y - g - sp.size * 0.6, 'center'],
@@ -312,14 +357,14 @@ function drawSky(ctx, scene, s) {
   }
 
   if (opts.starNames) {
-    const spec = { ...theme.starNames, spacing: 0.02, cjkSpacing: 0.04 };
+    const spec = scaled({ ...theme.starNames, spacing: 0.02, cjkSpacing: 0.04 }, km);
     ctx.fillStyle = spec.color;
     for (const { f, x, y, r } of bright.slice().sort((a, b) => a.f.properties.mag - b.f.properties.mag)) {
       if (f.properties.mag > 1.5) continue;
       const n = data.starNames[String(f.id)];
       if (!n) continue;
       const text = lang === 'zh' ? (opts.culture === 'chinese' ? (n.cn || n.zh) : (n.zh || n.cn)) : n.en;
-      const sp = labelSpec(spec, text), g = r + 4, dy = sp.size * 0.55;
+      const sp = labelSpec(spec, text), g = r + 4 * km, dy = sp.size * 0.55;
       placer.place(ctx, text, sp, [
         [x + g, y - dy, 'left'], [x + g, y + dy, 'left'], [x - g, y - dy, 'right'], [x - g, y + dy, 'right'],
       ]);
@@ -327,9 +372,10 @@ function drawSky(ctx, scene, s) {
   }
 
   if (opts.names) {
-    const spec = theme.labels;
+    const spec = scaled(theme.labels, km);
     ctx.fillStyle = spec.color;
-    const tries = (x, y) => [[x, y, 'center'], [x, y - 14, 'center'], [x, y + 14, 'center'], [x - 26, y, 'center'], [x + 26, y, 'center']];
+    const d = 14 * km, dx = 26 * km;
+    const tries = (x, y) => [[x, y, 'center'], [x, y - d, 'center'], [x, y + d, 'center'], [x - dx, y, 'center'], [x + dx, y, 'center']];
     if (opts.culture === 'chinese') {
       for (const f of data.consCn.features) {
         const name = f.properties.name;
@@ -360,44 +406,45 @@ function drawSky(ctx, scene, s) {
 
 // ---------- frame ----------
 
-function azPoint(az, r) {
+function azPoint(chart, az, r) {
   const a = az * Math.PI / 180;
-  return [CHART.cx - Math.sin(a) * r, CHART.cy - Math.cos(a) * r]; // north up, east left
+  return [chart.cx - Math.sin(a) * r, chart.cy - Math.cos(a) * r]; // north up, east left
 }
 
-function drawFrame(ctx, scene) {
+function drawFrame(ctx, scene, chart, seed = 4242) {
   const { theme, lang } = scene;
-  const { cx, cy, R } = CHART;
+  const { cx, cy, R } = chart;
+  const k = R / BASE_R, km = Math.pow(k, 0.8);
   const b = theme.border;
   ctx.strokeStyle = b.color;
 
   if (b.kind === 'thin') {
-    ctx.lineWidth = b.width;
+    ctx.lineWidth = b.width * km;
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
-    ctx.lineWidth = 0.6; ctx.globalAlpha = 0.45;
-    ctx.beginPath(); ctx.arc(cx, cy, R + 9, 0, TAU); ctx.stroke();
+    ctx.lineWidth = 0.6 * km; ctx.globalAlpha = 0.45;
+    ctx.beginPath(); ctx.arc(cx, cy, R + 9 * km, 0, TAU); ctx.stroke();
     ctx.globalAlpha = 1;
   } else if (b.kind === 'atlas') {
-    ctx.lineWidth = b.width;
+    ctx.lineWidth = b.width * km;
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx, cy, R + 18, 0, TAU); ctx.stroke();
-    ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.arc(cx, cy, R + 18 * km, 0, TAU); ctx.stroke();
+    ctx.lineWidth = 0.7 * km;
     for (let az = 0; az < 360; az += 5) {
-      const len = az % 30 === 0 ? 18 : az % 15 === 0 ? 11 : 6;
-      const [x1, y1] = azPoint(az, R), [x2, y2] = azPoint(az, R + len);
+      const len = (az % 30 === 0 ? 18 : az % 15 === 0 ? 11 : 6) * km;
+      const [x1, y1] = azPoint(chart, az, R), [x2, y2] = azPoint(chart, az, R + len);
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
     }
   } else if (b.kind === 'brush') {
-    const r = rng(4242);
+    const r = rng(seed);
     const phases = [r() * TAU, r() * TAU, r() * TAU];
-    const n = 420;
+    const n = Math.round(420 * Math.max(0.6, k));
     ctx.lineCap = 'round';
     for (let pass = 0; pass < 2; pass++) {
       for (let i = 0; i < n; i++) {
         const t0 = (i / n) * TAU, t1 = ((i + 1.3) / n) * TAU;
-        const wob = t => 1.6 * Math.sin(3 * t + phases[0]) + 0.9 * Math.sin(7 * t + phases[1]) + pass * 1.4;
+        const wob = t => (1.6 * Math.sin(3 * t + phases[0]) + 0.9 * Math.sin(7 * t + phases[1]) + pass * 1.4) * km;
         const dry = Math.sin(2 * t0 + phases[2]) > 0.93 ? 0.25 : 1;
-        const w = b.width * (0.55 + 0.6 * (0.5 + 0.5 * Math.sin(5 * t0 + phases[1]))) * (pass ? 0.45 : 1);
+        const w = b.width * km * (0.55 + 0.6 * (0.5 + 0.5 * Math.sin(5 * t0 + phases[1]))) * (pass ? 0.45 : 1);
         ctx.lineWidth = w;
         ctx.globalAlpha = (pass ? 0.35 : 0.9) * dry;
         ctx.beginPath();
@@ -412,13 +459,13 @@ function drawFrame(ctx, scene) {
   // Compass points
   const C = STR[lang].compass;
   const spec = theme.compass;
-  const dist = b.kind === 'atlas' ? R + 38 : b.kind === 'brush' ? R + 30 : R + 26;
+  const dist = R + (b.kind === 'atlas' ? 38 : b.kind === 'brush' ? 30 : 26) * km;
   ctx.fillStyle = spec.color;
   ctx.textBaseline = 'middle';
   for (const [key, az] of [['N', 0], ['E', 90], ['S', 180], ['W', 270]]) {
-    const [x, y] = azPoint(az, dist);
+    const [x, y] = azPoint(chart, az, dist);
     const text = C[key];
-    spacedText(ctx, text, x, y, labelSpec({ font: spec.font, size: spec.size, weight: 500, spacing: 0 }, text));
+    spacedText(ctx, text, x, y, labelSpec({ font: spec.font, size: spec.size * km, weight: 500, spacing: 0 }, text));
   }
 }
 
@@ -456,68 +503,145 @@ function moonLine(lang, moon) {
   return lang === 'zh' ? `月相：${name}（${pct}%）` : `Moon: ${name}, ${pct}% illuminated`;
 }
 
-function drawText(ctx, scene) {
-  const { theme, lang, text, local, place, sky } = scene;
+function birthdayLine(lang, culture, birthday) {
+  const name = birthdayStarName(lang, culture, birthday.star);
+  const ly = formatLy(lang, birthday.star.ly);
+  const L = STR[lang];
+  return (birthday.visible ? L.birthdayLineVisible : L.birthdayLineHidden).replace('{name}', name).replace('{ly}', ly);
+}
+
+// Fonts for the small info lines, per theme and language.
+function infoSpec(theme, lang) {
+  const T = theme.text;
+  if (theme.id === 'noir') return { ...T.info, upper: lang !== 'zh' };
+  if (theme.id === 'parchment') {
+    return lang === 'zh' ? { ...T.info, font: '"Noto Serif SC", "Songti SC", serif', size: T.info.size - 2, spacing: 0.06 } : T.info;
+  }
+  return lang === 'zh' ? T.info : { ...T.messageLatin, size: 18, italic: false, spacing: 0.06 };
+}
+
+function titleSpec(theme, title) {
+  const T = theme.text;
+  return theme.id === 'ink' && isLatin(title) ? T.titleLatin : T.title;
+}
+
+function messageSpec(theme, message) {
+  const T = theme.text;
+  if (theme.id === 'ink') return isLatin(message) ? T.messageLatin : T.message;
+  if (theme.id === 'parchment' && !isLatin(message)) return { ...T.message, italic: false, font: '"Noto Serif SC", serif', size: T.message.size - 3 };
+  return T.message;
+}
+
+// Title (+ ornament / seal) centred at `top`; returns the title width.
+function drawTitleBlock(ctx, scene, top, maxW) {
+  const { theme, text } = scene;
+  const T = theme.text;
+  const mid = POSTER_W / 2;
+  const title = text.title || '';
+  ctx.fillStyle = T.color;
+  let titleWidth = 0;
+  if (title) titleWidth = spacedText(ctx, title, mid, top, titleSpec(theme, title), { maxWidth: theme.id === 'ink' ? 700 : maxW });
+  if (theme.id === 'noir') {
+    ctx.strokeStyle = T.rule; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(mid - 32, top + 30); ctx.lineTo(mid + 32, top + 30); ctx.stroke();
+  } else if (theme.id === 'parchment') {
+    ctx.strokeStyle = T.rule; ctx.fillStyle = T.rule; ctx.lineWidth = 0.9;
+    const oy = top + 26;
+    ctx.beginPath(); ctx.moveTo(mid - 90, oy); ctx.lineTo(mid - 10, oy); ctx.moveTo(mid + 10, oy); ctx.lineTo(mid + 90, oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(mid, oy - 5); ctx.lineTo(mid + 5, oy); ctx.lineTo(mid, oy + 5); ctx.lineTo(mid - 5, oy); ctx.closePath(); ctx.fill();
+  } else if (theme.seal) {
+    const size = 50;
+    const sx = Math.min(mid + titleWidth / 2 + 22, POSTER_W - 90);
+    drawSeal(ctx, sx, top - 44, size, theme.seal);
+  }
+  return titleWidth;
+}
+
+function drawTextSingle(ctx, scene) {
+  const { theme, lang, text, local, place, sky, opts, birthday } = scene;
   const T = theme.text;
   const mid = POSTER_W / 2;
   const maxW = 820;
+  const chart = LAYOUTS.single[0];
   ctx.textBaseline = 'alphabetic';
-  const title = text.title || '';
   const message = text.message || '';
   const dateLine = formatDateLine(lang, local, theme.id);
   const coords = formatCoords(lang, place.lat, place.lon);
-  const top = CHART.cy + CHART.R + 122;
+  const top = chart.cy + chart.R + 122 + (theme.id === 'ink' ? 10 : 0);
+  const info = infoSpec(theme, lang);
 
-  if (theme.id === 'noir') {
+  drawTitleBlock(ctx, scene, top, maxW);
+  if (message) {
     ctx.fillStyle = T.color;
-    if (title) spacedText(ctx, title, mid, top, T.title, { maxWidth: maxW });
-    ctx.strokeStyle = T.rule; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(mid - 32, top + 30); ctx.lineTo(mid + 32, top + 30); ctx.stroke();
-    if (message) spacedText(ctx, message, mid, top + 78, T.message, { maxWidth: maxW });
-    ctx.fillStyle = T.sub;
-    const info = { ...T.info, upper: lang !== 'zh' };
-    const y0 = message ? top + 130 : top + 104;
-    spacedText(ctx, place.label, mid, y0, info, { maxWidth: maxW });
-    spacedText(ctx, dateLine, mid, y0 + 30, info, { maxWidth: maxW });
-    spacedText(ctx, coords, mid, y0 + 60, info, { maxWidth: maxW });
-  } else if (theme.id === 'parchment') {
-    ctx.fillStyle = T.color;
-    if (title) spacedText(ctx, title, mid, top + 4, T.title, { maxWidth: maxW });
-    ctx.strokeStyle = T.rule; ctx.fillStyle = T.rule; ctx.lineWidth = 0.9;
-    const oy = top + 30;
-    ctx.beginPath(); ctx.moveTo(mid - 90, oy); ctx.lineTo(mid - 10, oy); ctx.moveTo(mid + 10, oy); ctx.lineTo(mid + 90, oy); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(mid, oy - 5); ctx.lineTo(mid + 5, oy); ctx.lineTo(mid, oy + 5); ctx.lineTo(mid - 5, oy); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = T.color;
-    if (message) spacedText(ctx, message, mid, top + 78, isLatin(message) ? T.message : { ...T.message, italic: false, font: '"Noto Serif SC", serif', size: T.message.size - 3 }, { maxWidth: maxW });
-    ctx.fillStyle = T.sub;
-    // Chinese lines use a CJK serif with lining figures; Latin lines keep Cormorant.
-    const info = lang === 'zh' ? { ...T.info, font: '"Noto Serif SC", "Songti SC", serif', size: T.info.size - 2, spacing: 0.06 } : T.info;
-    const y0 = message ? top + 126 : top + 100;
-    spacedText(ctx, `${place.label}  ·  ${dateLine}`, mid, y0, info, { maxWidth: maxW });
-    spacedText(ctx, coords, mid, y0 + 28, info, { maxWidth: maxW });
-    spacedText(ctx, moonLine(lang, sky.moon), mid, y0 + 56, { ...info, italic: lang !== 'zh', size: info.size - 1 }, { maxWidth: maxW });
-  } else {
-    // ink
-    ctx.fillStyle = T.color;
-    const titleSpec = isLatin(title) ? T.titleLatin : T.title;
-    let titleWidth = 0;
-    if (title) titleWidth = spacedText(ctx, title, mid, top + 10, titleSpec, { maxWidth: 700 });
-    if (theme.seal) {
-      const size = 50;
-      const sx = Math.min(mid + titleWidth / 2 + 22, POSTER_W - 90);
-      drawSeal(ctx, sx, top - 34, size, theme.seal);
-    }
-    if (message) spacedText(ctx, message, mid, top + 72, isLatin(message) ? T.messageLatin : T.message, { maxWidth: maxW });
-    ctx.fillStyle = T.sub;
-    const infoSpec = lang === 'zh' ? T.info : { ...T.messageLatin, size: 18, italic: false, spacing: 0.06 };
-    const y0 = message ? top + 124 : top + 100;
-    spacedText(ctx, dateLine, mid, y0, infoSpec, { maxWidth: maxW });
+    spacedText(ctx, message, mid, top + (theme.id === 'ink' ? 62 : 78), messageSpec(theme, message), { maxWidth: maxW });
+  }
+  ctx.fillStyle = T.sub;
+  let y = top + (message ? 128 : 102) - (theme.id === 'ink' ? 6 : 0);
+  const lines = [];
+  if (theme.id === 'noir') lines.push(place.label, dateLine, coords);
+  else if (theme.id === 'parchment') lines.push(`${place.label}  ·  ${dateLine}`, coords, moonLine(lang, sky.moon));
+  else {
     const lunar = lunarDate(local);
-    const second = lang === 'zh'
-      ? `${lunar ? `农历${lunar}  ·  ` : ''}${place.label}`
-      : `${place.label}  ·  ${coords}`;
-    spacedText(ctx, second, mid, y0 + 30, infoSpec, { maxWidth: maxW });
-    if (lang === 'zh') spacedText(ctx, coords, mid, y0 + 60, infoSpec, { maxWidth: maxW });
+    lines.push(dateLine);
+    if (lang === 'zh') lines.push(`${lunar ? `农历${lunar}  ·  ` : ''}${place.label}`, coords);
+    else lines.push(`${place.label}  ·  ${coords}`);
+  }
+  const step = theme.id === 'parchment' ? 28 : 30;
+  lines.forEach((ln, i) => {
+    const isMoon = theme.id === 'parchment' && i === 2;
+    spacedText(ctx, ln, mid, y, isMoon ? { ...info, italic: lang !== 'zh', size: info.size - 1 } : info, { maxWidth: maxW });
+    y += step;
+  });
+  if (birthday) {
+    ctx.fillStyle = theme.accent;
+    const spec = { ...info, upper: false, italic: lang !== 'zh' && theme.id !== 'noir', size: info.size, spacing: Math.min(info.spacing || 0, 0.06) };
+    spacedText(ctx, birthdayLine(lang, opts.culture, birthday), mid, y + 12, spec, { maxWidth: maxW });
+  }
+}
+
+function drawTextDouble(ctx, scene) {
+  const { theme, lang, text, skies } = scene;
+  const T = theme.text;
+  const [A, B] = LAYOUTS.double;
+  const info = infoSpec(theme, lang);
+  const capBase = titleSpec(theme, text.title || '');
+  ctx.textBaseline = 'alphabetic';
+
+  skies.forEach((sk, i) => {
+    const chart = i === 0 ? A : B;
+    const leftSide = i === 1; // second sky sits on the right, so its caption goes on the left
+    const x = leftSide ? chart.cx - chart.R - 60 : chart.cx + chart.R + 60;
+    const align = leftSide ? 'right' : 'left';
+    const maxW = leftSide ? x - 40 : POSTER_W - 40 - x;
+    const caption = sk.caption || '';
+    const capSpec = { ...capBase, size: Math.min(capBase.size * 0.58, 36), upper: false, spacing: theme.id === 'noir' ? 0.12 : capBase.spacing };
+    const lines = [formatDateLine(lang, sk.local, theme.id)];
+    if (theme.id === 'ink' && lang === 'zh') {
+      const lunar = lunarDate(sk.local);
+      if (lunar) lines.push(`农历${lunar}`);
+    }
+    lines.push(sk.place.label, formatCoords(lang, sk.place.lat, sk.place.lon));
+    const blockH = 44 + lines.length * 27;
+    let y = chart.cy - blockH / 2 + 24;
+    if (caption) {
+      ctx.fillStyle = T.color;
+      spacedText(ctx, caption, x, y, capSpec, { align, maxWidth: maxW });
+      y += 42;
+    }
+    ctx.fillStyle = T.sub;
+    const small = { ...info, size: info.size - 1 };
+    for (const ln of lines) {
+      spacedText(ctx, ln, x, y, small, { align, maxWidth: maxW });
+      y += 27;
+    }
+  });
+
+  const top = B.cy + B.R + 118;
+  drawTitleBlock(ctx, scene, top, 820);
+  const message = text.message || '';
+  if (message) {
+    ctx.fillStyle = T.color;
+    spacedText(ctx, message, POSTER_W / 2, top + (theme.id === 'ink' ? 58 : 72), messageSpec(theme, message), { maxWidth: 820 });
   }
 }
 
@@ -532,6 +656,7 @@ function drawCredit(ctx, scene) {
   spacedText(ctx, credit, POSTER_W / 2, POSTER_H - 38, spec, { maxWidth: 900 });
 }
 
+// scene.skies: [{ sky, local, place, caption }] — one entry for the single layout, two for the double layout.
 export function renderPoster(canvas, scene) {
   const ctx = canvas.getContext('2d');
   const s = canvas.width / POSTER_W;
@@ -540,9 +665,17 @@ export function renderPoster(canvas, scene) {
   ctx.globalAlpha = 1;
   ctx.filter = 'none';
   drawPaper(ctx, scene.theme);
-  const proj = drawSky(ctx, scene, s);
-  drawFrame(ctx, scene);
-  drawText(ctx, scene);
+  const layout = scene.skies.length > 1 ? 'double' : 'single';
+  const charts = LAYOUTS[layout];
+  scene.skies.forEach((sk, i) => {
+    drawSky(ctx, scene, s, sk.sky, charts[i], layout === 'single' ? scene.birthday : null);
+    drawFrame(ctx, scene, charts[i], 4242 + i * 77);
+  });
+  if (layout === 'single') {
+    const sk = scene.skies[0];
+    drawTextSingle(ctx, { ...scene, sky: sk.sky, local: sk.local, place: sk.place });
+  } else {
+    drawTextDouble(ctx, scene);
+  }
   if (scene.opts.credit) drawCredit(ctx, scene);
-  return proj;
 }
