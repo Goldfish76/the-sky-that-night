@@ -1,0 +1,6 @@
+.claude/
+exports/
+*.png
+!docs/**/*.png
+.DS_Store
+Thumbs.db

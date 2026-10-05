@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Sky That Night · 那晚星空</title>
+  <meta name="description" content="Pick a date and a place, get a print-ready poster of the real night sky at that moment. Free, open source, runs entirely in your browser. 输入日期和地点，生成那一刻真实星空的海报。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@400;600&display=swap">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-en">The Sky That Night</span>
+      <span class="brand-zh">那晚星空</span>
+    </div>
+    <p class="tagline" data-i18n="tagline"></p>
+    <a class="gh-link" href="https://github.com/Goldfish76/the-sky-that-night" target="_blank" rel="noopener">★ <span data-i18n="starOnGithub"></span></a>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="zh">中文</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel">
+      <section>
+        <h2 data-i18n="sectionMoment"></h2>
+        <div class="row">
+          <label><span data-i18n="date"></span><input id="date" type="date"></label>
+          <label><span data-i18n="time"></span><input id="time" type="time"></label>
+        </div>
+      </section>
+
+      <section>
+        <h2 data-i18n="sectionPlace"></h2>
+        <label><span data-i18n="city"></span>
+          <input id="city" list="city-list" autocomplete="off" data-i18n-ph="cityPlaceholder">
+          <datalist id="city-list"></datalist>
+        </label>
+        <div class="row tight">
+          <label class="check"><input id="custom" type="checkbox"><span data-i18n="customCoords"></span></label>
+          <button id="locate" type="button" class="ghost" data-i18n="useMyLocation"></button>
+        </div>
+        <div id="custom-fields" hidden>
+          <div class="row">
+            <label><span data-i18n="lat"></span><input id="lat" type="number" step="0.0001" min="-90" max="90"></label>
+            <label><span data-i18n="lon"></span><input id="lon" type="number" step="0.0001" min="-180" max="180"></label>
+          </div>
+          <label><span data-i18n="timezone"></span><select id="tz"></select></label>
+        </div>
+        <p class="note" id="tz-note"></p>
+        <label><span data-i18n="placeLabel"></span><input id="place-label" type="text" maxlength="60"></label>
+      </section>
+
+      <section>
+        <h2 data-i18n="sectionStyle"></h2>
+        <div class="themes">
+          <button type="button" class="theme-card" data-theme="noir"><span class="swatch noir"></span><span data-theme-name="noir"></span></button>
+          <button type="button" class="theme-card" data-theme="parchment"><span class="swatch parchment"></span><span data-theme-name="parchment"></span></button>
+          <button type="button" class="theme-card" data-theme="ink"><span class="swatch ink"></span><span data-theme-name="ink"></span></button>
+        </div>
+        <p class="sublabel" data-i18n="skyCulture"></p>
+        <div class="row tight">
+          <label class="check"><input type="radio" name="culture" value="western"><span data-i18n="western"></span></label>
+          <label class="check"><input type="radio" name="culture" value="chinese"><span data-i18n="chinese"></span></label>
+        </div>
+      </section>
+
+      <section>
+        <h2 data-i18n="sectionText"></h2>
+        <label><span data-i18n="title"></span><input id="title" type="text" maxlength="40"></label>
+        <label><span data-i18n="message"></span><input id="message" type="text" maxlength="70" data-i18n-ph="messagePlaceholder"></label>
+      </section>
+
+      <section>
+        <h2 data-i18n="sectionLayers"></h2>
+        <div class="checks">
+          <label class="check"><input type="checkbox" data-opt="lines"><span data-i18n="layerLines"></span></label>
+          <label class="check"><input type="checkbox" data-opt="names"><span data-i18n="layerNames"></span></label>
+          <label class="check"><input type="checkbox" data-opt="milkyWay"><span data-i18n="layerMilkyWay"></span></label>
+          <label class="check"><input type="checkbox" data-opt="bodies"><span data-i18n="layerBodies"></span></label>
+          <label class="check"><input type="checkbox" data-opt="starNames"><span data-i18n="layerStarNames"></span></label>
+          <label class="check"><input type="checkbox" data-opt="grid"><span data-i18n="layerGrid"></span></label>
+          <label class="check"><input type="checkbox" data-opt="credit"><span data-i18n="layerCredit"></span></label>
+        </div>
+      </section>
+
+      <section>
+        <h2 data-i18n="sectionExport"></h2>
+        <label><span data-i18n="size"></span>
+          <select id="size">
+            <option value="a4" data-size="a4"></option>
+            <option value="a3" data-size="a3"></option>
+            <option value="web" data-size="web"></option>
+          </select>
+        </label>
+        <button id="export" type="button" class="primary" data-i18n="exportPng"></button>
+      </section>
+
+      <p class="privacy" data-i18n="privacy"></p>
+    </aside>
+
+    <section class="stage">
+      <div class="poster-wrap"><canvas id="poster" aria-label="Star map poster preview"></canvas></div>
+      <p class="status" id="status" role="status"></p>
+    </section>
+  </main>
+
+  <script src="vendor/d3.min.js"></script>
+  <script src="vendor/astronomy.browser.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

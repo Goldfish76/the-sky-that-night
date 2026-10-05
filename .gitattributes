@@ -1,0 +1,4 @@
+* text=auto
+vendor/** linguist-vendored
+data/** linguist-generated
+*.jpg binary
