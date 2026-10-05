@@ -16,14 +16,11 @@ Free, open source, and nothing ever leaves your browser.
 - **Two sky cultures.** Western constellations, or traditional Chinese asterisms (the 28 lunar mansions, 北斗, 织女, 牛郎…).
 - **Moon with the right phase and orientation, plus the five naked-eye planets and the Milky Way.**
 - **Real local time.** Your browser's time-zone database applies historical daylight-saving rules.
-- **Bilingual (English / 中文).** The Chinese styles can show the lunar date, the traditional double-hour (时辰) and vertical text.
 - **Light-year birthday star.** Enter a birthday and the poster marks a naked-eye star whose distance in light-years matches the age that night. The light you saw from it left the star the year you were born.
 - **Two skies on one poster.** For example, the nights two people were born, each with its own date and place.
 - **Any place on Earth.** Offline search over 34,000 cities with their time zones, or enter custom coordinates.
 - **Print-ready PNG, PDF or SVG.** A4 or A3 at 300 DPI. The SVG is fully vector (with its fonts embedded), so you can edit it or send it to a laser engraver.
 - **Phone wallpaper.** A 1290 × 2796 version that keeps the top clear for the lock-screen clock.
-- **Share links.** Every setting lives in the link, so you can send someone the exact poster, or bookmark it.
-- **Private by design.** No account, no tracking, no uploads, no third-party requests. Fonts are self-hosted and city search runs offline.
 
 ## Styles
 
@@ -86,17 +83,6 @@ Then open http://localhost:8000. Any static file server works.
 ## Make your own style
 
 A style is one object in [`js/themes.js`](js/themes.js): colours, fonts, and effects picked by name (paper textures, star shapes, frames, text layouts). The effects live in [`js/decor.js`](js/decor.js), [`js/layouts.js`](js/layouts.js) and [`js/horizon.js`](js/horizon.js). Copy a theme, change it, add its id to `THEME_ORDER`, and run `python -m http.server`. Pull requests with new styles are welcome.
-
-## Roadmap
-
-- [x] Light-year birthday star
-- [x] Two skies on one poster
-- [x] PDF export (300 DPI)
-- [x] Offline search for any city
-- [x] Vector SVG export, phone wallpapers and share links
-- [x] Self-hosted fonts (no Google Fonts, works where it is blocked)
-- [x] 17 styles
-- [ ] Birthday stars in the two-sky layout
 
 ## Rebuilding the data
 
