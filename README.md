@@ -23,7 +23,9 @@ Free, open source, and nothing ever leaves your browser.
 - **Light-year birthday star.** Enter a birthday and the poster marks a naked-eye star whose distance in light-years matches the age that night. The light you saw from it left the star the year you were born.
 - **Two skies on one poster.** For example, the nights two people were born, each with its own date and place.
 - **Any place on Earth.** Offline search over 34,000 cities with their time zones, or enter custom coordinates.
-- **Print-ready PNG or PDF.** A4 or A3 at 300 DPI.
+- **Print-ready PNG, PDF or SVG.** A4 or A3 at 300 DPI. The SVG is fully vector (with its fonts embedded), so you can edit it or send it to a laser engraver.
+- **Phone wallpaper.** A 1290 × 2796 version that keeps the top clear for the lock-screen clock.
+- **Share links.** Every setting lives in the link, so you can send someone the exact poster, or bookmark it.
 - **Private by design.** No account, no tracking, no uploads, no third-party requests. Fonts are self-hosted and city search runs offline.
 
 | Noir | Parchment | Ink Wash |
@@ -33,6 +35,15 @@ Free, open source, and nothing ever leaves your browser.
 | Light-year birthday star | Two skies | 两片星空 |
 |---|---|---|
 | ![Birthday star](docs/samples/birthday-star-noir.jpg) | ![Two skies, Parchment](docs/samples/two-skies-parchment.jpg) | ![Two skies, Ink Wash](docs/samples/two-skies-ink.jpg) |
+
+## Famous nights to try
+
+Each link opens the app with that moment already set.
+
+| [One Small Step](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=noir&cu=w&o=lmbsc&d=1969-07-20&t=21%3A56&lat=29.76&lon=-95.37&tz=America%2FChicago&pn=Houston&pz=%E4%BC%91%E6%96%AF%E6%95%A6&ti=One+Small+Step&msg=The+Moon%2C+23%C2%B0+above+Houston%2C+as+Armstrong+stepped+onto+it) | [Saint-Rémy, 1889](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=parchment&cu=w&o=lnmbgsc&d=1889-06-19&t=03%3A00&lat=43.789&lon=4.832&tz=Europe%2FParis&pn=Saint-R%C3%A9my-de-Provence&ti=Saint-R%C3%A9my%2C+1889&msg=Before+dawn%2C+the+month+Van+Gogh+painted+The+Starry+Night) | [七夕 · 北京](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=zh&th=ink&cu=cn&o=lnmbsc&d=2026-08-19&t=21%3A00&lat=39.904&lon=116.407&tz=Asia%2FShanghai&pn=Beijing&pz=%E5%8C%97%E4%BA%AC&ti=%E9%82%A3%E6%99%9A%E7%9A%84%E6%98%9F%E7%A9%BA&msg=%E8%BF%A2%E8%BF%A2%E7%89%B5%E7%89%9B%E6%98%9F%EF%BC%8C%E7%9A%8E%E7%9A%8E%E6%B2%B3%E6%B1%89%E5%A5%B3) |
+|---|---|---|
+| ![Houston, July 20 1969, 9:56 PM](docs/samples/famous-apollo11-houston.jpg) | ![Saint-Rémy, June 19 1889, before dawn](docs/samples/famous-starry-night-1889.jpg) | ![Beijing, Qixi 2026](docs/samples/ink-beijing-qixi.jpg) |
+| Houston at 9:56 PM on July 20, 1969, the moment Armstrong stepped onto the Moon. The Moon is 23° above the western horizon. | Before dawn in Saint-Rémy, the month Van Gogh painted *The Starry Night*. Venus, the bright "morning star" of the painting, is rising in the east. | Qixi (Chinese Valentine's Day) 2026 in Beijing: the Weaver Girl (Vega) and the Cowherd (Altair) on either side of the Milky Way. |
 
 ## Run it locally
 
@@ -62,7 +73,7 @@ Then open http://localhost:8000. Any static file server works.
 - [x] Two skies on one poster
 - [x] PDF export (300 DPI)
 - [x] Offline search for any city
-- [ ] Vector SVG export
+- [x] Vector SVG export, phone wallpapers and share links
 - [x] Self-hosted fonts (no Google Fonts, works where it is blocked)
 - [ ] Birthday stars in the two-sky layout
 - [ ] More styles. Themes live in [`js/themes.js`](js/themes.js); pull requests welcome.

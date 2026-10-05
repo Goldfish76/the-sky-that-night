@@ -1,4 +1,5 @@
-// Poster renderer. Draws everything onto a 2D canvas in poster units (1000 × 1414).
+// Poster renderer. Draws everything onto a 2D canvas in poster units: 1000 wide,
+// 1414 tall for the A-series poster or 2167 tall for a phone wallpaper.
 import { makeProjection, isAboveHorizon, eclipticLine } from './astro.js';
 import {
   STR, CONSTELLATION_ZH, LABELED_ASTERISMS,
@@ -8,15 +9,27 @@ import {
 const d3 = window.d3;
 
 export const POSTER_W = 1000;
-export const POSTER_H = 1414;
 const BASE_R = 395;
 const TAU = Math.PI * 2;
 
-// Chart geometry per layout. "double" is a zigzag: first sky top-left, second sky bottom-right.
-export const LAYOUTS = {
-  single: [{ cx: 500, cy: 520, R: BASE_R }],
-  double: [{ cx: 360, cy: 330, R: 248 }, { cx: 640, cy: 858, R: 248 }],
+// Chart geometry per format and layout.
+export const FORMATS = {
+  // A-series poster (1 : √2). "double" is a zigzag with captions beside each sky.
+  poster: {
+    h: 1414,
+    single: [{ cx: 500, cy: 520, R: BASE_R }],
+    double: [{ cx: 360, cy: 330, R: 248 }, { cx: 640, cy: 858, R: 248 }],
+    captions: 'side',
+  },
+  // Phone wallpaper (1290 × 2796). The top stays clear for the lock-screen clock.
+  phone: {
+    h: 2796 * 1000 / 1290,
+    single: [{ cx: 500, cy: 1150, R: 430 }],
+    double: [{ cx: 500, cy: 780, R: 270 }, { cx: 500, cy: 1530, R: 270 }],
+    captions: 'below',
+  },
 };
+export const POSTER_H = FORMATS.poster.h;
 
 function rng(seed) {
   let a = seed >>> 0;
@@ -106,15 +119,16 @@ class Placer {
 
 // ---------- paper ----------
 
-function drawPaper(ctx, theme) {
+function drawPaper(ctx, theme, H) {
   const P = theme.paper;
   ctx.fillStyle = P.base;
-  ctx.fillRect(0, 0, POSTER_W, POSTER_H);
+  ctx.fillRect(0, 0, POSTER_W, H);
   const r = rng(theme.id.length * 9973 + 17);
+  const density = H / FORMATS.poster.h;
 
   if (P.blotches) {
-    for (let i = 0; i < P.blotches; i++) {
-      const x = r() * POSTER_W, y = r() * POSTER_H, rad = 60 + r() * 220;
+    for (let i = 0; i < P.blotches * density; i++) {
+      const x = r() * POSTER_W, y = r() * H, rad = 60 + r() * 220;
       const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
       g.addColorStop(0, `rgba(150,105,45,${0.03 + r() * 0.04})`);
       g.addColorStop(1, 'rgba(150,105,45,0)');
@@ -124,8 +138,8 @@ function drawPaper(ctx, theme) {
   }
   if (P.fibers) {
     ctx.lineCap = 'round';
-    for (let i = 0; i < P.fibers; i++) {
-      const x = r() * POSTER_W, y = r() * POSTER_H;
+    for (let i = 0; i < P.fibers * density; i++) {
+      const x = r() * POSTER_W, y = r() * H;
       const len = 8 + r() * 26, ang = r() * TAU, bend = (r() - 0.5) * 10;
       ctx.beginPath();
       ctx.moveTo(x, y);
@@ -139,15 +153,18 @@ function drawPaper(ctx, theme) {
     }
   }
   ctx.fillStyle = P.speckle;
-  for (let i = 0; i < P.speckles; i++) {
-    const s = 0.5 + r() * 1.3;
-    ctx.fillRect(r() * POSTER_W, r() * POSTER_H, s, s);
+  if (!ctx.isVector) {
+    // Paper grain: thousands of specks look right in pixels but would bloat a vector file.
+    for (let i = 0; i < P.speckles * density; i++) {
+      const s = 0.5 + r() * 1.3;
+      ctx.fillRect(r() * POSTER_W, r() * H, s, s);
+    }
   }
-  const v = ctx.createRadialGradient(POSTER_W / 2, POSTER_H / 2, POSTER_H * 0.3, POSTER_W / 2, POSTER_H / 2, POSTER_H * 0.82);
+  const v = ctx.createRadialGradient(POSTER_W / 2, H / 2, H * 0.3, POSTER_W / 2, H / 2, H * 0.82);
   v.addColorStop(0, 'rgba(0,0,0,0)');
   v.addColorStop(1, P.vignette);
   ctx.fillStyle = v;
-  ctx.fillRect(0, 0, POSTER_W, POSTER_H);
+  ctx.fillRect(0, 0, POSTER_W, H);
 }
 
 // ---------- sky ----------
@@ -557,12 +574,11 @@ function drawTitleBlock(ctx, scene, top, maxW) {
   return titleWidth;
 }
 
-function drawTextSingle(ctx, scene) {
+function drawTextSingle(ctx, scene, chart) {
   const { theme, lang, text, local, place, sky, opts, birthday } = scene;
   const T = theme.text;
   const mid = POSTER_W / 2;
   const maxW = 820;
-  const chart = LAYOUTS.single[0];
   ctx.textBaseline = 'alphabetic';
   const message = text.message || '';
   const dateLine = formatDateLine(lang, local, theme.id);
@@ -599,13 +615,37 @@ function drawTextSingle(ctx, scene) {
   }
 }
 
-function drawTextDouble(ctx, scene) {
+function drawTextDouble(ctx, scene, charts, captions) {
   const { theme, lang, text, skies } = scene;
   const T = theme.text;
-  const [A, B] = LAYOUTS.double;
+  const [A, B] = charts;
   const info = infoSpec(theme, lang);
   const capBase = titleSpec(theme, text.title || '');
   ctx.textBaseline = 'alphabetic';
+
+  if (captions === 'below') {
+    // Phone wallpaper: a caption and one info line centred under each sky.
+    skies.forEach((sk, i) => {
+      const chart = charts[i];
+      const capSpec = { ...capBase, size: Math.min(capBase.size * 0.5, 32), upper: false, spacing: theme.id === 'noir' ? 0.12 : capBase.spacing };
+      let y = chart.cy + chart.R + 68;
+      if (sk.caption) {
+        ctx.fillStyle = T.color;
+        spacedText(ctx, sk.caption, POSTER_W / 2, y, capSpec, { maxWidth: 820 });
+        y += 34;
+      }
+      ctx.fillStyle = T.sub;
+      spacedText(ctx, `${sk.place.label}  ·  ${formatDateLine(lang, sk.local, theme.id)}`, POSTER_W / 2, y,
+        { ...info, size: info.size - 1 }, { maxWidth: 820 });
+    });
+    const top = B.cy + B.R + 205;
+    drawTitleBlock(ctx, scene, top, 820);
+    if (text.message) {
+      ctx.fillStyle = T.color;
+      spacedText(ctx, text.message, POSTER_W / 2, top + (theme.id === 'ink' ? 58 : 72), messageSpec(theme, text.message), { maxWidth: 820 });
+    }
+    return;
+  }
 
   skies.forEach((sk, i) => {
     const chart = i === 0 ? A : B;
@@ -645,7 +685,7 @@ function drawTextDouble(ctx, scene) {
   }
 }
 
-function drawCredit(ctx, scene) {
+function drawCredit(ctx, scene, H) {
   const { theme, lang, opts } = scene;
   ctx.fillStyle = theme.credit;
   ctx.textBaseline = 'alphabetic';
@@ -653,29 +693,36 @@ function drawCredit(ctx, scene) {
   let credit = STR[lang].credit;
   // The Chinese asterism data comes from Stellarium's sky culture (CC BY-SA), which asks for attribution.
   if (opts.culture === 'chinese' && (opts.lines || opts.names)) credit += STR[lang].creditChinese;
-  spacedText(ctx, credit, POSTER_W / 2, POSTER_H - 38, spec, { maxWidth: 900 });
+  spacedText(ctx, credit, POSTER_W / 2, H - 38, spec, { maxWidth: 900 });
+}
+
+export function posterHeight(format = 'poster') {
+  return (FORMATS[format] || FORMATS.poster).h;
 }
 
 // scene.skies: [{ sky, local, place, caption }] — one entry for the single layout, two for the double layout.
+// scene.format: 'poster' (default) or 'phone'. `canvas` may also be the SVG recorder from svg.js.
 export function renderPoster(canvas, scene) {
   const ctx = canvas.getContext('2d');
+  const F = FORMATS[scene.format] || FORMATS.poster;
+  const H = F.h;
   const s = canvas.width / POSTER_W;
   ctx.setTransform(s, 0, 0, s, 0, 0);
-  ctx.clearRect(0, 0, POSTER_W, POSTER_H);
+  ctx.clearRect(0, 0, POSTER_W, H);
   ctx.globalAlpha = 1;
   ctx.filter = 'none';
-  drawPaper(ctx, scene.theme);
+  drawPaper(ctx, scene.theme, H);
   const layout = scene.skies.length > 1 ? 'double' : 'single';
-  const charts = LAYOUTS[layout];
+  const charts = F[layout];
   scene.skies.forEach((sk, i) => {
     drawSky(ctx, scene, s, sk.sky, charts[i], layout === 'single' ? scene.birthday : null);
     drawFrame(ctx, scene, charts[i], 4242 + i * 77);
   });
   if (layout === 'single') {
     const sk = scene.skies[0];
-    drawTextSingle(ctx, { ...scene, sky: sk.sky, local: sk.local, place: sk.place });
+    drawTextSingle(ctx, { ...scene, sky: sk.sky, local: sk.local, place: sk.place }, charts[0]);
   } else {
-    drawTextDouble(ctx, scene);
+    drawTextDouble(ctx, scene, charts, F.captions);
   }
-  if (scene.opts.credit) drawCredit(ctx, scene);
+  if (scene.opts.credit) drawCredit(ctx, scene, H);
 }

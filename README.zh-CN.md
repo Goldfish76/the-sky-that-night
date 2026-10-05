@@ -23,7 +23,9 @@
 - **光年生日星：** 填上生日，海报会标出一颗肉眼可见的星，它离地球的距离（以光年计）约等于你那晚的年龄。那晚你看到的它的光，正是在你出生那年出发的。
 - **两片星空：** 一张海报上放两片星空，比如两个人各自出生的那晚，日期和地点各不相同。
 - **全球任意地点：** 离线搜索 3.4 万个城市，自动带出时区；也可以手动输入经纬度。
-- **打印级导出：** PNG 或 PDF，A4 / A3，300 DPI。
+- **打印级导出：** PNG、PDF 或 SVG，A4 / A3，300 DPI。SVG 是全矢量的（内嵌字体），可以二次编辑，也可以直接用于激光雕刻。
+- **手机壁纸：** 1290 × 2796 竖版，顶部留出锁屏时钟的位置。
+- **分享链接：** 所有设置都存在链接里，发给别人就能打开同一张海报，也可以收藏起来下次接着改。
 - **隐私：** 不用注册，不做追踪，不上传任何数据，也不向任何第三方发请求。字体放在本站，城市搜索在本地完成。
 
 | 极简黑 | 复古羊皮纸 | 水墨 |
@@ -35,6 +37,17 @@
 | 光年生日星 | 两片星空（羊皮纸） | 两片星空（水墨） |
 |---|---|---|
 | ![光年生日星](docs/samples/birthday-star-ink.jpg) | ![两片星空](docs/samples/two-skies-parchment.jpg) | ![两片星空 水墨](docs/samples/two-skies-ink.jpg) |
+
+## 试试这些"名场面"之夜
+
+点链接会直接打开设置好的星空。
+
+| [七夕 · 北京](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=zh&th=ink&cu=cn&o=lnmbsc&d=2026-08-19&t=21%3A00&lat=39.904&lon=116.407&tz=Asia%2FShanghai&pn=Beijing&pz=%E5%8C%97%E4%BA%AC&ti=%E9%82%A3%E6%99%9A%E7%9A%84%E6%98%9F%E7%A9%BA&msg=%E8%BF%A2%E8%BF%A2%E7%89%B5%E7%89%9B%E6%98%9F%EF%BC%8C%E7%9A%8E%E7%9A%8E%E6%B2%B3%E6%B1%89%E5%A5%B3) | [登月那一刻](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=noir&cu=w&o=lmbsc&d=1969-07-20&t=21%3A56&lat=29.76&lon=-95.37&tz=America%2FChicago&pn=Houston&pz=%E4%BC%91%E6%96%AF%E6%95%A6&ti=One+Small+Step&msg=The+Moon%2C+23%C2%B0+above+Houston%2C+as+Armstrong+stepped+onto+it) | [圣雷米，1889](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=parchment&cu=w&o=lnmbgsc&d=1889-06-19&t=03%3A00&lat=43.789&lon=4.832&tz=Europe%2FParis&pn=Saint-R%C3%A9my-de-Provence&ti=Saint-R%C3%A9my%2C+1889&msg=Before+dawn%2C+the+month+Van+Gogh+painted+The+Starry+Night) |
+|---|---|---|
+| ![2026 年七夕的北京](docs/samples/ink-beijing-qixi.jpg) | ![1969 年 7 月 20 日的休斯敦](docs/samples/famous-apollo11-houston.jpg) | ![1889 年 6 月的圣雷米](docs/samples/famous-starry-night-1889.jpg) |
+| 2026 年七夕晚上九点的北京：织女星和牛郎星分列银河两岸，月亮正好是上弦月。 | 1969 年 7 月 20 日晚 9:56 的休斯敦，阿姆斯特朗踏上月球的那一刻：月亮就挂在西边 23° 的高度。 | 梵高画《星月夜》的那个月，圣雷米黎明前的天空：画里那颗明亮的"启明星"金星，正从东方升起。 |
+
+![手机壁纸](docs/samples/phone-wallpaper-ink.jpg)
 
 ## 本地运行
 
@@ -64,7 +77,7 @@ python -m http.server 8000
 - [x] 两片星空
 - [x] PDF 导出（300 DPI）
 - [x] 离线搜索全球城市
-- [ ] 矢量 SVG 导出
+- [x] 矢量 SVG 导出、手机壁纸、分享链接
 - [x] 字体自托管：不依赖 Google Fonts，在国内也能正常显示
 - [ ] 两片星空版式也支持光年生日星
 - [ ] 更多风格：主题都在 [`js/themes.js`](js/themes.js)，欢迎提 PR

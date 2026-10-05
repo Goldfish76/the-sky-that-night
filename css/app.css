@@ -137,6 +137,8 @@ button.ghost { background: transparent; color: var(--accent); border: 1px solid 
 
 label.spaced { margin-top: 10px; }
 button.primary.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+button.full { width: 100%; margin-top: 8px; }
+button.ghost.full { padding: 8px 14px; font-size: 13px; }
 
 .stage {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -145,7 +147,8 @@ button.primary.secondary { background: transparent; color: var(--accent); border
 }
 
 .poster-wrap {
-  width: min(100%, calc((100vh - 61px - 90px) / 1.414));
+  --ratio: 1.414;
+  width: min(100%, calc((100vh - 61px - 90px) / var(--ratio)));
   min-width: 260px;
   aspect-ratio: 1000 / 1414;
   box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4);
