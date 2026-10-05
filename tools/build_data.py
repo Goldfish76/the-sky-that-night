@@ -6,6 +6,7 @@ Downloads the sources into tools/.cache/ and writes:
   data/starnames.bright.json  bright-star names (d3-celestial, BSD-3-Clause)
   data/lightyear.json         naked-eye stars within 125 light-years (HYG v4.1, CC BY-SA 4.0)
   data/cities.json            world cities with population >= 15,000 (GeoNames, CC BY 4.0)
+  data/mansions.json          the 28 lunar mansions and their boundary stars (Stellarium sky culture via d3-celestial)
 """
 import csv
 import io
@@ -150,6 +151,23 @@ def build_cities():
     print(f"cities.json: {len(cities)} cities, {len(zones)} time zones")
 
 
+MANSIONS = "角亢氐房心尾箕斗牛女虚危室壁奎娄胃昴毕觜参井鬼柳星张翼轸"
+
+
+def build_mansions():
+    """Each mansion starts at the hour circle of its first star ("X宿一" in the Chinese sky culture)."""
+    sncn = load_json("starnames_cn")
+    stars = {str(f["id"]): f for f in load_json("stars")["features"]}
+    by_name = {v["name"]: k for k, v in sncn.items()}
+    out = []
+    for m in MANSIONS:
+        hip = by_name[m + "宿一"]
+        ra, dec = stars[hip]["geometry"]["coordinates"]
+        out.append({"n": m, "hip": int(hip), "c": [ra, dec]})
+    write("mansions.json", out)
+    print(f"mansions.json: {len(out)} mansions")
+
+
 def write(name, obj):
     (DATA / name).write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
@@ -158,3 +176,4 @@ if __name__ == "__main__":
     build_bright_names()
     build_lightyear()
     build_cities()
+    build_mansions()

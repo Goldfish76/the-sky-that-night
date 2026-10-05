@@ -11,7 +11,7 @@ export async function loadData(base = 'data/') {
     if (!r.ok) throw new Error(`Failed to load ${name}`);
     return r.json();
   });
-  const [stars, lines, linesCn, cons, consCn, mw, starNames, nearby] = await Promise.all([
+  const [stars, lines, linesCn, cons, consCn, mw, starNames, nearby, mansions] = await Promise.all([
     get('stars.6.json'),
     get('constellations.lines.json'),
     get('constellations.lines.cn.json'),
@@ -20,10 +20,11 @@ export async function loadData(base = 'data/') {
     get('mw.json'),
     get('starnames.bright.json'),
     get('lightyear.json'),
+    get('mansions.json'),
   ]);
   stars.features.sort((a, b) => b.properties.mag - a.properties.mag); // faint first, bright on top
   fixWinding(mw);
-  return { stars, lines, linesCn, cons, consCn, mw, starNames, nearby };
+  return { stars, lines, linesCn, cons, consCn, mw, starNames, nearby, mansions };
 }
 
 const MS_PER_YEAR = 365.2425 * 86400000;

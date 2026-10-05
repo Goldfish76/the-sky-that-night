@@ -25,15 +25,25 @@ G = "https://raw.githubusercontent.com/google/fonts/main/ofl/"
 
 # (css family, google/fonts path, weights, italic, cjk)
 FONTS = [
-    ("Jost", "jost/Jost%5Bwght%5D.ttf", [300, 400, 500], False, False),
+    ("Jost", "jost/Jost%5Bwght%5D.ttf", [300, 400, 500, 700], False, False),
     ("Jost", "jost/Jost-Italic%5Bwght%5D.ttf", [400], True, False),
     ("Cormorant Garamond", "cormorantgaramond/CormorantGaramond%5Bwght%5D.ttf", [400, 500, 600], False, False),
     ("Cormorant Garamond", "cormorantgaramond/CormorantGaramond-Italic%5Bwght%5D.ttf", [400, 500], True, False),
     ("Noto Sans SC", "notosanssc/NotoSansSC%5Bwght%5D.ttf", [300, 400], False, True),
     ("Noto Serif SC", "notoserifsc/NotoSerifSC%5Bwght%5D.ttf", [400, 600], False, True),
     ("Ma Shan Zheng", "mashanzheng/MaShanZheng-Regular.ttf", [400], False, True),
+    ("Space Mono", "spacemono/SpaceMono-Regular.ttf", [400], False, False),
+    ("Space Mono", "spacemono/SpaceMono-Bold.ttf", [700], False, False),
+    ("VT323", "vt323/VT323-Regular.ttf", [400], False, False),
+    ("Poiret One", "poiretone/PoiretOne-Regular.ttf", [400], False, False),
+    ("Great Vibes", "greatvibes/GreatVibes-Regular.ttf", [400], False, False),
+    ("Oxanium", "oxanium/Oxanium%5Bwght%5D.ttf", [400, 700], False, False),
+    ("Long Cang", "longcang/LongCang-Regular.ttf", [400], False, True),
+    ("ZCOOL QingKe HuangYou", "zcoolqingkehuangyou/ZCOOLQingKeHuangYou-Regular.ttf", [400], False, True),
+    ("Caveat", "caveat/Caveat%5Bwght%5D.ttf", [400, 600], False, False),
 ]
-LICENSE_DIRS = ["jost", "cormorantgaramond", "notosanssc", "notoserifsc", "mashanzheng"]
+LICENSE_DIRS = ["jost", "cormorantgaramond", "notosanssc", "notoserifsc", "mashanzheng",
+                "spacemono", "vt323", "poiretone", "greatvibes", "oxanium", "longcang", "zcoolqingkehuangyou", "caveat"]
 
 LATIN = (list(range(0x20, 0x7F)) + list(range(0xA0, 0x180)) + list(range(0x370, 0x400))
          + list(range(0x2000, 0x2070)) + list(range(0x2070, 0x20A0)) + [0x20AC, 0x2122, 0x2190, 0x2192, 0x2605])
@@ -97,10 +107,12 @@ def subset_to(font_path, unicodes, out_path):
     options.notdef_outline = True
     options.hinting = False
     options.desubroutinize = True
-    font = TTFont(font_path)
+    # A fixed timestamp keeps rebuilds byte-identical, so git only sees fonts that really changed.
+    font = TTFont(font_path, recalcTimestamp=False)
     sub = subset.Subsetter(options)
     sub.populate(unicodes=unicodes)
     sub.subset(font)
+    font["head"].modified = font["head"].created
     font.flavor = "woff2"
     font.save(out_path)
     return out_path.stat().st_size
@@ -130,10 +142,12 @@ def main():
     hanzi = gb2312()
     core = sorted({ord(c) for c in core_chars} | set(LATIN_CJK) | set(range(0x3000, 0x3040)) | set(range(0xFF00, 0xFF5F)))
     core_set = set(core)
-    rest = [ord(c) for c in hanzi if ord(c) not in core_set]
+    # The other slices are fixed runs of GB2312 (then the rarer city characters), minus whatever
+    # the core slice already has. New UI text then changes only the core and the runs it touches.
+    rest = [ord(c) for c in hanzi]
     rest_set = set(rest)
-    rest += sorted(ord(c) for c in city_chars if ord(c) not in core_set and ord(c) not in rest_set)
-    slices = [core] + [rest[i:i + SLICE] for i in range(0, len(rest), SLICE)]
+    rest += sorted(ord(c) for c in city_chars if ord(c) not in rest_set)
+    slices = [core] + [[c for c in rest[i:i + SLICE] if c not in core_set] for i in range(0, len(rest), SLICE)]
     print(f"core slice: {len(core)} code points; {len(slices) - 1} more slices of up to {SLICE}")
 
     css, total = [], 0
@@ -141,7 +155,7 @@ def main():
         src = fetch(G + path, path.split("/")[-1].replace("%5B", "[").replace("%5D", "]"))
         slug = family.lower().replace(" ", "-") + ("-italic" if italic else "")
         for w in weights:
-            inst = static_instance(src, w, slug)
+            inst = static_instance(src, w, f"{slug}-{src.stem}")
             cmap = set(TTFont(inst)["cmap"].getBestCmap().keys())
             parts = slices if cjk else [LATIN]
             for i, cps in enumerate(parts):

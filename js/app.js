@@ -3,7 +3,7 @@ import {
 } from './astro.js';
 import { renderPoster, POSTER_W, posterHeight, birthdayStarName } from './render.js';
 import { renderSvg } from './svg.js';
-import { THEMES, THEME_ORDER } from './themes.js';
+import { THEMES, THEME_ORDER, BASE_FONTS } from './themes.js';
 import { STR } from './i18n.js';
 import { CITIES } from './cities.js';
 import { searchPlaces, loadWorld, placeName, countryName } from './places.js';
@@ -53,6 +53,7 @@ function applyI18n() {
   $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   $$('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   $$('[data-theme-name]').forEach(el => { el.textContent = STR[state.lang].themes[el.dataset.themeName]; });
+  $$('[data-theme-img]').forEach(el => { el.src = `img/themes/${el.dataset.themeImg}-${state.lang}.jpg`; });
   $$('[data-size]').forEach(el => { el.textContent = STR[state.lang].sizes[el.dataset.size]; });
   $$('.lang button').forEach(b => b.classList.toggle('active', b.dataset.lang === state.lang));
   if (!state.titleEdited) { state.title = t('defaultTitle'); $('#title').value = state.title; }
@@ -180,7 +181,7 @@ function buildScene() {
     const local = localParts(sk);
     const utc = zonedToUtc(local, sk.tz);
     return {
-      sky: computeSky(utc, sk.lat, sk.lon), utc, local,
+      sky: computeSky(utc, sk.lat, sk.lon), utc, local, tz: sk.tz,
       place: { label: sk.label, lat: sk.lat, lon: sk.lon },
       caption: sk.caption,
     };
@@ -219,24 +220,34 @@ function updateBirthdayNote() {
   }
 }
 
+// Every font a theme asks for (any object with font + size), as CSS font shorthands.
+function themeFonts(theme) {
+  const out = new Set(['600 16px "Cormorant Garamond"', '700 16px "Space Mono"']); // used by stamps and postmarks
+  const walk = o => {
+    if (!o || typeof o !== 'object') return;
+    if (typeof o.font === 'string' && o.size) out.add(`${o.italic ? 'italic ' : ''}${o.weight || 400} 16px ${o.font}`);
+    Object.values(o).forEach(walk);
+  };
+  walk(theme);
+  return [...out];
+}
+
 // Load the web-font slices needed for the strings we are about to draw.
 async function ensureFonts(scene) {
   if (!document.fonts || !document.fonts.load) return false;
   const sample = [scene.text.title, scene.text.message, ...scene.skies.flatMap(s => [s.place.label, s.caption]),
     STR[scene.lang].credit, STR[scene.lang].birthdayLineVisible,
-    '北东南西 NESW 0123456789 农历年月日时宿星那晚空光', ...Object.values(STR[scene.lang].bodies)].join(' ');
-  const families = ['"Jost"', '"Noto Sans SC"', '"Noto Serif SC"', '"Cormorant Garamond"', '"Ma Shan Zheng"'];
-  const before = families.map(f => document.fonts.check(`16px ${f}`, sample));
+    '北东南西 NESW 0123456789 农历年月日时宿星那晚空光寄', ...Object.values(STR[scene.lang].bodies)].join(' ');
+  const families = [...new Set([...BASE_FONTS, ...(scene.theme.fonts || [])])];
+  const specs = [...families.flatMap(f => [`400 16px ${f}`, `italic 500 16px ${f}`]), ...themeFonts(scene.theme)];
+  const before = specs.map(f => document.fonts.check(f, sample));
   try {
     await Promise.race([
-      Promise.all(families.flatMap(f => [
-        document.fonts.load(`400 16px ${f}`, sample),
-        document.fonts.load(`italic 500 16px ${f}`, sample),
-      ])),
+      Promise.all(specs.map(f => document.fonts.load(f, sample))),
       new Promise(res => setTimeout(res, 4000)),
     ]);
   } catch { /* offline: fall back to system fonts */ }
-  const after = families.map(f => document.fonts.check(`16px ${f}`, sample));
+  const after = specs.map(f => document.fonts.check(f, sample));
   return after.some((v, i) => v && !before[i]);
 }
 
@@ -352,7 +363,17 @@ async function exportFile(kind) {
   }
 }
 
+// Theme picker: one card per theme, with a small sample poster.
+function buildThemeCards() {
+  $('#themes').innerHTML = THEME_ORDER.map(id => `
+    <button type="button" class="theme-card" data-theme="${id}">
+      <img data-theme-img="${id}" alt="" loading="lazy" width="90" height="127">
+      <span data-theme-name="${id}"></span>
+    </button>`).join('');
+}
+
 function initControls() {
+  buildThemeCards();
   const startCity = CITIES.find(c => c[4] === browserTz) || (state.lang === 'zh' ? CITIES[1] : CITIES.find(c => c[0] === 'New York'));
   const second = CITIES.find(c => c[0] === (state.lang === 'zh' ? 'Beijing' : 'London'));
   state.skies = [newSky(curatedPlace(startCity)), newSky(curatedPlace(second))];

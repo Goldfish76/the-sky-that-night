@@ -7,19 +7,16 @@ Free, open source, and nothing ever leaves your browser.
 
 [中文说明](README.zh-CN.md)
 
-![Three posters: Noir, Parchment and Ink Wash](docs/hero.jpg)
+![Five posters: Dunhuang, Stamp, Forest, Embroidery and Risograph](docs/hero.jpg)
 
 ## Features
 
 - **The real sky, not a pretty guess.** Stars, Moon and planets are computed for your exact date, time and place.
-- **Three styles:**
-  - *Noir*: minimal black.
-  - *Parchment*: an old star atlas, with a coordinate grid and the ecliptic.
-  - *Ink Wash*: Chinese 水墨 painting with a red seal.
+- **17 styles**, from minimal to handmade (see them all [below](#styles)).
 - **Two sky cultures.** Western constellations, or traditional Chinese asterisms (the 28 lunar mansions, 北斗, 织女, 牛郎…).
 - **Moon with the right phase and orientation, plus the five naked-eye planets and the Milky Way.**
 - **Real local time.** Your browser's time-zone database applies historical daylight-saving rules.
-- **Bilingual (English / 中文).** The Ink style can show the Chinese lunar date and the traditional double-hour (时辰).
+- **Bilingual (English / 中文).** The Chinese styles can show the lunar date, the traditional double-hour (时辰) and vertical text.
 - **Light-year birthday star.** Enter a birthday and the poster marks a naked-eye star whose distance in light-years matches the age that night. The light you saw from it left the star the year you were born.
 - **Two skies on one poster.** For example, the nights two people were born, each with its own date and place.
 - **Any place on Earth.** Offline search over 34,000 cities with their time zones, or enter custom coordinates.
@@ -28,9 +25,28 @@ Free, open source, and nothing ever leaves your browser.
 - **Share links.** Every setting lives in the link, so you can send someone the exact poster, or bookmark it.
 - **Private by design.** No account, no tracking, no uploads, no third-party requests. Fonts are self-hosted and city search runs offline.
 
-| Noir | Parchment | Ink Wash |
+## Styles
+
+![All 17 styles, showing the same night over New York](docs/styles-en.jpg)
+
+- **Minimal:** *Noir* and *Snow*.
+- **Vintage:** *Parchment* (an old star atlas), *Gilded* (Art Deco in gold), *Blueprint* (an engineering drawing with a title block), *Stamp* (a perforated stamp whose postmark carries your date and place).
+- **Chinese:** *Ink Wash* (水墨 with a red seal), *Dunhuang* (after the Tang-dynasty Dunhuang star chart: stars in three pigments, the 28 lunar mansions, the Milky Way as a band, and the text in vertical columns).
+- **Handmade:** *Watercolor* (every poster gets its own wash), *Embroidery* (a hoop, back-stitched constellations and a cross-stitched title), *Risograph* (two inks, halftone dots, loose registration), *Instant Photo* (a taped instant photo with a handwritten caption).
+- **Photographic:** *Deep Sky* (an astrophoto), *Forest* (lying in a clearing, the treeline framing the sky), *City* (looking straight up between towers, where only the brighter stars get through).
+- **Screens:** *Neon* and *Terminal* (the poster as a shell session).
+
+The treeline and the skyline are drawn from the place's coordinates, so every place gets its own, and anything behind them is hidden as it would be in a real all-sky photo.
+
+Click a poster to open it in the app.
+
+| [Forest · Yosemite](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=forest&cu=w&o=lmbc&d=2026-08-12&t=23%3A30&lat=37.745&lon=-119.593&tz=America%2FLos_Angeles&pn=Yosemite+Valley&msg=Under+the+Perseids) | [Stamp · Lisbon](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=stamp&cu=w&o=lmbc&d=2026-07-18&t=22%3A30&lat=38.722&lon=-9.139&tz=Europe%2FLisbon&pn=Lisbon&pz=%E9%87%8C%E6%96%AF%E6%9C%AC&msg=Wish+you+were+here) | [Embroidery · 杭州](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=zh&th=embroidery&cu=w&o=lmbc&d=2026-05-20&t=21%3A00&lat=30.274&lon=120.155&tz=Asia%2FShanghai&pn=Hangzhou&pz=%E6%9D%AD%E5%B7%9E&msg=%E4%BA%94%E6%9C%88%E4%BA%8C%E5%8D%81%E6%97%A5%EF%BC%8C%E8%A5%BF%E6%B9%96%E8%BE%B9) |
 |---|---|---|
-| ![Noir](docs/samples/noir-new-york.jpg) | ![Parchment](docs/samples/parchment-london.jpg) | ![Ink Wash](docs/samples/ink-beijing-qixi.jpg) |
+| [![Forest](docs/samples/forest-yosemite.jpg)](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=forest&cu=w&o=lmbc&d=2026-08-12&t=23%3A30&lat=37.745&lon=-119.593&tz=America%2FLos_Angeles&pn=Yosemite+Valley&msg=Under+the+Perseids) | [![Stamp](docs/samples/stamp-lisbon.jpg)](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=stamp&cu=w&o=lmbc&d=2026-07-18&t=22%3A30&lat=38.722&lon=-9.139&tz=Europe%2FLisbon&pn=Lisbon&pz=%E9%87%8C%E6%96%AF%E6%9C%AC&msg=Wish+you+were+here) | [![Embroidery](docs/samples/embroidery-hangzhou.jpg)](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=zh&th=embroidery&cu=w&o=lmbc&d=2026-05-20&t=21%3A00&lat=30.274&lon=120.155&tz=Asia%2FShanghai&pn=Hangzhou&pz=%E6%9D%AD%E5%B7%9E&msg=%E4%BA%94%E6%9C%88%E4%BA%8C%E5%8D%81%E6%97%A5%EF%BC%8C%E8%A5%BF%E6%B9%96%E8%BE%B9) |
+
+| [Dunhuang · 敦煌, Mid-Autumn](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=zh&th=dunhuang&cu=cn&o=lnmbc&d=2026-09-25&t=21%3A00&lat=40.142&lon=94.662&tz=Asia%2FShanghai&pn=Dunhuang&pz=%E6%95%A6%E7%85%8C&msg=%E6%B5%B7%E4%B8%8A%E7%94%9F%E6%98%8E%E6%9C%88%EF%BC%8C%E5%A4%A9%E6%B6%AF%E5%85%B1%E6%AD%A4%E6%97%B6) | [City · New Year's Eve](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=city&cu=w&o=lbsc&ti=The+Last+Night+of+2026&msg=One+minute+to+midnight&d=2026-12-31&t=23%3A59&lat=40.758&lon=-73.986&tz=America%2FNew_York&pn=New+York&pz=%E7%BA%BD%E7%BA%A6&pl=Times+Square) | [Instant Photo · Paris](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=instant&cu=w&o=lmbc&d=2026-06-14&t=23%3A30&lat=48.857&lon=2.352&tz=Europe%2FParis&pn=Paris&pz=%E5%B7%B4%E9%BB%8E&msg=Our+first+night+in+Paris) |
+|---|---|---|
+| [![Dunhuang](docs/samples/dunhuang-mid-autumn.jpg)](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=zh&th=dunhuang&cu=cn&o=lnmbc&d=2026-09-25&t=21%3A00&lat=40.142&lon=94.662&tz=Asia%2FShanghai&pn=Dunhuang&pz=%E6%95%A6%E7%85%8C&msg=%E6%B5%B7%E4%B8%8A%E7%94%9F%E6%98%8E%E6%9C%88%EF%BC%8C%E5%A4%A9%E6%B6%AF%E5%85%B1%E6%AD%A4%E6%97%B6) | [![City](docs/samples/city-new-years-eve.jpg)](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=city&cu=w&o=lbsc&ti=The+Last+Night+of+2026&msg=One+minute+to+midnight&d=2026-12-31&t=23%3A59&lat=40.758&lon=-73.986&tz=America%2FNew_York&pn=New+York&pz=%E7%BA%BD%E7%BA%A6&pl=Times+Square) | [![Instant Photo](docs/samples/instant-paris.jpg)](https://goldfish76.github.io/the-sky-that-night/#v=1&lang=en&th=instant&cu=w&o=lmbc&d=2026-06-14&t=23%3A30&lat=48.857&lon=2.352&tz=Europe%2FParis&pn=Paris&pz=%E5%B7%B4%E9%BB%8E&msg=Our+first+night+in+Paris) |
 
 | Light-year birthday star | Two skies | 两片星空 |
 |---|---|---|
@@ -67,6 +83,10 @@ Then open http://localhost:8000. Any static file server works.
 6. **Not modelled:** atmospheric refraction. Near the horizon, real stars appear up to ~0.5° higher.
 7. **Birthday-star distances:** from the [HYG database](https://github.com/astronexus/HYG-Database) (Hipparcos parallaxes). For the fainter stars the uncertainty can be a few light-years.
 
+## Make your own style
+
+A style is one object in [`js/themes.js`](js/themes.js): colours, fonts, and effects picked by name (paper textures, star shapes, frames, text layouts). The effects live in [`js/decor.js`](js/decor.js), [`js/layouts.js`](js/layouts.js) and [`js/horizon.js`](js/horizon.js). Copy a theme, change it, add its id to `THEME_ORDER`, and run `python -m http.server`. Pull requests with new styles are welcome.
+
 ## Roadmap
 
 - [x] Light-year birthday star
@@ -75,14 +95,14 @@ Then open http://localhost:8000. Any static file server works.
 - [x] Offline search for any city
 - [x] Vector SVG export, phone wallpapers and share links
 - [x] Self-hosted fonts (no Google Fonts, works where it is blocked)
+- [x] 17 styles
 - [ ] Birthday stars in the two-sky layout
-- [ ] More styles. Themes live in [`js/themes.js`](js/themes.js); pull requests welcome.
 
 ## Rebuilding the data
 
-`python tools/build_data.py` downloads the public sources and regenerates the files in `data/` (star names, birthday-star distances, world cities).
+`python tools/build_data.py` downloads the public sources and regenerates the files in `data/` (star names, birthday-star distances, world cities, the 28 lunar mansions).
 `python tools/build_fonts.py` rebuilds the self-hosted fonts in `fonts/` (needs `pip install fonttools brotli`).
 
 ## Credits and license
 
-The code is under the [MIT License](LICENSE). Data and libraries keep their own licenses, listed in [ATTRIBUTION.md](ATTRIBUTION.md). Note that the Chinese asterism data is **CC BY-SA**. Posters drawn with it carry that attribution in the credit line.
+The code is under the [MIT License](LICENSE). Data, libraries and fonts keep their own licenses, listed in [ATTRIBUTION.md](ATTRIBUTION.md). Note that the Chinese asterism data is **CC BY-SA**. Posters drawn with it carry that attribution in the credit line.

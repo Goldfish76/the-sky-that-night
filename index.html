@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Sky That Night · 那晚星空</title>
-  <meta name="description" content="Pick a date and a place, get a print-ready poster of the real night sky at that moment. Free, open source, runs entirely in your browser. 输入日期和地点，生成那一刻真实星空的海报。">
+  <meta name="description" content="Pick a date and a place, get a print-ready poster of the real night sky at that moment, in 17 styles. Free, open source, runs entirely in your browser. 输入日期和地点，生成那一刻真实星空的海报。">
   <meta property="og:title" content="The Sky That Night · 那晚星空">
-  <meta property="og:description" content="A print-ready poster of the real night sky for any date and place. Free and open source.">
+  <meta property="og:description" content="A print-ready poster of the real night sky for any date and place, in 17 styles. Free and open source.">
   <meta property="og:image" content="https://goldfish76.github.io/the-sky-that-night/docs/social-preview.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="fonts/fonts.css">
@@ -84,11 +84,7 @@
 
       <section>
         <h2 data-i18n="sectionStyle"></h2>
-        <div class="themes">
-          <button type="button" class="theme-card" data-theme="noir"><span class="swatch noir"></span><span data-theme-name="noir"></span></button>
-          <button type="button" class="theme-card" data-theme="parchment"><span class="swatch parchment"></span><span data-theme-name="parchment"></span></button>
-          <button type="button" class="theme-card" data-theme="ink"><span class="swatch ink"></span><span data-theme-name="ink"></span></button>
-        </div>
+        <div class="themes" id="themes"></div>
         <p class="sublabel" data-i18n="skyCulture"></p>
         <div class="row tight">
           <label class="check"><input type="radio" name="culture" value="western"><span data-i18n="western"></span></label>

@@ -22,10 +22,10 @@ function paint(c) {
 }
 
 class Gradient {
-  constructor(ctx, x0, y0, r0, x1, y1, r1) {
+  constructor(ctx, x0, y0, r0, x1, y1, r1, linear = false) {
     this.ctx = ctx;
     this.m = ctx.state.m.slice();
-    Object.assign(this, { x0, y0, r0, x1, y1, r1 });
+    Object.assign(this, { x0, y0, r0, x1, y1, r1, linear });
     this.stops = [];
   }
   addColorStop(offset, color) { this.stops.push([offset, color]); }
@@ -40,7 +40,11 @@ class Gradient {
         const p = paint(col);
         return `<stop offset="${n(o)}" stop-color="${p.color}" stop-opacity="${n(p.opacity)}"/>`;
       }).join('');
-      this.ctx.defs.push(`<radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${n(cx)}" cy="${n(cy)}" r="${n(this.r1 * k)}" fx="${n(fx)}" fy="${n(fy)}" fr="${n(this.r0 * k)}">${stops}</radialGradient>`);
+      if (this.linear) {
+        this.ctx.defs.push(`<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${n(fx)}" y1="${n(fy)}" x2="${n(cx)}" y2="${n(cy)}">${stops}</linearGradient>`);
+      } else {
+        this.ctx.defs.push(`<radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${n(cx)}" cy="${n(cy)}" r="${n(this.r1 * k)}" fx="${n(fx)}" fy="${n(fy)}" fr="${n(this.r0 * k)}">${stops}</radialGradient>`);
+      }
       this.id = id;
     }
     return `url(#${this.id})`;
@@ -58,7 +62,7 @@ export class SvgContext {
     this.state = {
       fillStyle: '#000', strokeStyle: '#000', lineWidth: 1, lineCap: 'butt', lineJoin: 'miter', dash: [],
       font: '10px sans-serif', textAlign: 'start', textBaseline: 'alphabetic', globalAlpha: 1, filter: 'none',
-      m: [1, 0, 0, 1, 0, 0], clip: null,
+      blend: 'source-over', m: [1, 0, 0, 1, 0, 0], clip: null,
     };
     this.d = '';
     this.hasPoint = false;
@@ -78,6 +82,7 @@ export class SvgContext {
   get textBaseline() { return this.state.textBaseline; } set textBaseline(v) { this.state.textBaseline = v; }
   get globalAlpha() { return this.state.globalAlpha; } set globalAlpha(v) { this.state.globalAlpha = v; }
   get filter() { return this.state.filter; } set filter(v) { this.state.filter = v; }
+  get globalCompositeOperation() { return this.state.blend; } set globalCompositeOperation(v) { this.state.blend = v; }
   setLineDash(a) { this.state.dash = a.slice(); }
   save() { this.stack.push({ ...this.state, m: this.state.m.slice(), dash: this.state.dash.slice() }); }
   restore() { if (this.stack.length) this.state = this.stack.pop(); }
@@ -133,6 +138,8 @@ export class SvgContext {
   common() {
     let s = '';
     if (this.state.globalAlpha < 1) s += ` opacity="${n(this.state.globalAlpha)}"`;
+    const blend = { multiply: 'multiply', screen: 'screen', overlay: 'overlay', lighter: 'plus-lighter', 'soft-light': 'soft-light' }[this.state.blend];
+    if (blend) s += ` style="mix-blend-mode:${blend}"`;
     if (this.state.clip) s += ` clip-path="url(#${this.state.clip})"`;
     const m = /blur\(([\d.]+)px\)/.exec(this.state.filter || '');
     if (m && +m[1] > 0) {
@@ -150,7 +157,8 @@ export class SvgContext {
   fill() { if (this.d) this.body.push(`<path d="${this.d}" ${this.fillAttrs(this.state.fillStyle)}${this.common()}/>`); }
   stroke() {
     if (!this.d) return;
-    const p = paint(this.state.strokeStyle), k = this.scale();
+    const st = this.state.strokeStyle;
+    const p = st instanceof Gradient ? { color: st.ref(), opacity: 1 } : paint(st), k = this.scale();
     let s = `<path d="${this.d}" fill="none" stroke="${p.color}" stroke-width="${n(this.state.lineWidth * k)}"`;
     if (p.opacity < 1) s += ` stroke-opacity="${n(p.opacity)}"`;
     if (this.state.lineCap !== 'butt') s += ` stroke-linecap="${this.state.lineCap}"`;
@@ -169,6 +177,7 @@ export class SvgContext {
   clearRect() {}
 
   createRadialGradient(x0, y0, r0, x1, y1, r1) { return new Gradient(this, x0, y0, r0, x1, y1, r1); }
+  createLinearGradient(x0, y0, x1, y1) { return new Gradient(this, x0, y0, 0, x1, y1, 0, true); }
 
   // --- text ---
   parseFont() {
@@ -183,7 +192,8 @@ export class SvgContext {
     const k = this.scale();
     const anchor = { center: 'middle', right: 'end', end: 'end' }[this.state.textAlign] || 'start';
     const base = { middle: ' dominant-baseline="central"', top: ' dominant-baseline="hanging"' }[this.state.textBaseline] || '';
-    const p = paint(this.state.fillStyle);
+    const fs = this.state.fillStyle;
+    const p = fs instanceof Gradient ? { color: fs.ref(), opacity: 1 } : paint(fs);
     const family = f.family.replace(/"/g, "'");
     this.body.push(`<text x="${n(X)}" y="${n(Y)}" font-family="${esc(family)}" font-size="${n(f.size * k)}"`
       + `${f.weight !== 400 ? ` font-weight="${f.weight}"` : ''}${f.italic ? ' font-style="italic"' : ''}`

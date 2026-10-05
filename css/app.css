@@ -93,17 +93,19 @@ input:focus, select:focus { outline: 2px solid color-mix(in srgb, var(--accent) 
 .note { margin: -4px 0 10px; color: var(--muted); font-size: 12px; }
 .sublabel { margin: 12px 0 6px; color: var(--muted); font-size: 12px; }
 
-.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 6px; }
 .theme-card {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
   background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 10px 6px 8px; cursor: pointer; font: inherit; font-size: 12px;
+  padding: 6px 4px 6px; cursor: pointer; font: inherit; font-size: 11px; line-height: 1.25; text-align: center;
+  transition: border-color 0.15s, transform 0.15s;
 }
+.theme-card:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); transform: translateY(-1px); }
 .theme-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-.swatch { width: 44px; height: 44px; border-radius: 50%; display: block; border: 1px solid rgba(255,255,255,0.15); }
-.swatch.noir { background: radial-gradient(circle at 40% 35%, #2a3142 0, #0b0d13 70%); }
-.swatch.parchment { background: radial-gradient(circle at 40% 35%, #f6ead0 0, #d8c08e 80%); }
-.swatch.ink { background: radial-gradient(circle at 40% 40%, #f5f1e8 0, #e5ddcc 60%, #b9b1a2 100%); position: relative; }
+.theme-card img {
+  width: 100%; max-width: 90px; aspect-ratio: 1000 / 1414; height: auto; object-fit: cover; display: block;
+  border-radius: 3px; box-shadow: 0 3px 10px rgba(0,0,0,0.45); background: #0b0d13;
+}
 
 button.primary, button.ghost {
   font: inherit; border-radius: 8px; cursor: pointer; padding: 9px 14px;
