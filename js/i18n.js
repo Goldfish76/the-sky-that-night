@@ -1,3 +1,5 @@
+import { lunarDateOf, formatLunar } from './lunar.js';
+
 export const STR = {
   zh: {
     appName: '那晚星空',
@@ -223,26 +225,10 @@ export function cnNumeralDate({ y, m, d }) {
   return `${year}年${cnNumber(m)}月${cnNumber(d)}日`;
 }
 
-const LUNAR_DAYS = [
-  '初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
-  '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
-  '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十',
-];
-
-// Chinese lunisolar date, e.g. "丙午年八月廿四", from the browser's built-in Chinese calendar.
+// Chinese lunisolar date of a civil date, e.g. "丙午年八月廿四" (see lunar.js).
 export function lunarDate({ y, m, d }) {
   try {
-    const fmt = new Intl.DateTimeFormat('zh-CN-u-ca-chinese', {
-      timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric',
-    });
-    const parts = fmt.formatToParts(new Date(Date.UTC(y, m - 1, d, 12)));
-    const get = type => (parts.find(p => p.type === type) || {}).value || '';
-    const yearName = get('yearName');
-    const month = get('month');
-    const dayNum = parseInt(get('day'), 10);
-    const day = Number.isFinite(dayNum) ? LUNAR_DAYS[dayNum - 1] : get('day');
-    if (!yearName || !month || !day) return '';
-    return `${yearName}年${month}${day}`;
+    return formatLunar(lunarDateOf({ y, m, d }));
   } catch {
     return '';
   }

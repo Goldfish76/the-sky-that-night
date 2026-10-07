@@ -79,6 +79,7 @@ Then open http://localhost:8000. Any static file server works.
 5. **Check:** compared against Astronomy Engine's own altitude/azimuth for bright stars, the largest error is about **0.005°**.
 6. **Not modelled:** atmospheric refraction. Near the horizon, real stars appear up to ~0.5° higher.
 7. **Birthday-star distances:** from the [HYG database](https://github.com/astronexus/HYG-Database) (Hipparcos parallaxes). For the fainter stars the uncertainty can be a few light-years.
+8. **Chinese lunar dates:** computed from the new moons and solar terms by the rules of the national standard GB/T 33661-2017, not taken from the browser's built-in calendar. They match the Hong Kong Observatory's tables for every day from 1901 to 2100.
 
 ## Make your own style
 
